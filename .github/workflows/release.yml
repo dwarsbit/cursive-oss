@@ -139,6 +139,18 @@ jobs:
             echo "$name=${!name}" >> "$GITHUB_ENV"
           done
 
+      # See .github/actions/windows-signing and docs/releasing.md.
+      - name: Configure Windows signing
+        if: runner.os == 'Windows'
+        uses: ./.github/actions/windows-signing
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          account: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE }}
+
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         run: |

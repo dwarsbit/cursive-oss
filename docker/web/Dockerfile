@@ -13,9 +13,13 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages/tsconfig packages/tsconfig
 COPY packages/eslint-config/package.json packages/eslint-config/
 COPY packages/editor/package.json packages/editor/
+COPY packages/i18n/package.json packages/i18n/
+COPY packages/updates/package.json packages/updates/
 COPY apps/cursive/package.json apps/cursive/
 RUN pnpm install --frozen-lockfile --ignore-scripts --filter @scholarkit/cursive...
 COPY packages/editor packages/editor
+COPY packages/i18n packages/i18n
+COPY packages/updates packages/updates
 COPY apps/cursive apps/cursive
 RUN pnpm --filter @scholarkit/cursive build:web
 
