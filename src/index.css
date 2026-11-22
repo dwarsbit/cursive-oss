@@ -1,0 +1,908 @@
+@import "tailwindcss";
+@import "@scholarkit/editor/tokens.css";
+@import "@scholarkit/editor/editor.css";
+@import "@scholarkit/updates/updates.css";
+
+/* ---------- Shell: the sidebar on the backdrop, the page as a card ---------- */
+.app {
+  display: grid;
+  grid-template-columns: var(--sidebar-width, 248px) minmax(0, 1fr);
+  gap: 8px;
+  height: 100%;
+  padding: 8px;
+}
+.sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  font-size: 12px;
+}
+/* The sidebar's edge: the gap between it and the page, dragged to resize. */
+.sidebar-resizer {
+  position: absolute;
+  top: 0;
+  right: -8px;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+}
+.sidebar-resizer::after {
+  content: "";
+  position: absolute;
+  inset: 8px 3px;
+  border-radius: 1px;
+  transition: background 120ms;
+}
+.sidebar-resizer:hover::after,
+.pointer-dragging .sidebar-resizer::after {
+  background: var(--border);
+}
+.sidebar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding-right: 6px;
+  border-radius: 6px;
+  color: var(--accent-foreground);
+  cursor: pointer;
+  user-select: none;
+}
+.row:hover,
+.row:focus-within {
+  background: var(--accent);
+}
+.row-active,
+.row-active:hover {
+  background: var(--tint-soft);
+  color: var(--tint-foreground);
+  font-weight: 500;
+}
+.row-main {
+  align-self: stretch;
+}
+/* Where a dragged row lands. */
+.row-drop-before {
+  box-shadow: inset 0 2px 0 var(--tint);
+}
+.row-drop-after {
+  box-shadow: inset 0 -2px 0 var(--tint);
+}
+.row-drop-into {
+  box-shadow: inset 0 0 0 1px var(--tint);
+}
+/* Rows don't light up under a drag passing over them. */
+.pointer-dragging .row:hover {
+  background: none;
+}
+.pointer-dragging .row .row-action {
+  display: none;
+}
+.pointer-dragging .row .row-count {
+  display: inline;
+}
+.pointer-dragging .row-active:hover {
+  background: var(--tint-soft);
+}
+.row .row-action {
+  display: none;
+}
+.row:hover .row-action,
+.row:focus-within .row-action {
+  display: grid;
+}
+.row:hover .row-count,
+.row:focus-within .row-count {
+  display: none;
+}
+.row-count {
+  padding: 0 4px;
+}
+/* The macOS window has no title bar: its window buttons sit over the
+   top left corner, where the sidebar's head and, in a narrow window,
+   the page's header leave room for them. */
+.window-buttons .sidebar-head {
+  padding-left: 76px;
+}
+.window-buttons .sidebar-head .mark {
+  display: none;
+}
+.menu-button {
+  display: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--muted-foreground);
+}
+.menu-button:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+.scrim {
+  display: none;
+}
+
+/* A narrow window: the sidebar slides in over the page. */
+@media (max-width: 860px) {
+  .app {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sidebar-resizer {
+    display: none;
+  }
+  .sidebar {
+    position: fixed;
+    z-index: 40;
+    inset: 0 auto 0 0;
+    width: 272px;
+    padding: 8px;
+    background: var(--sidebar);
+    box-shadow: var(--pop-shadow);
+    transform: translateX(-105%);
+    transition: transform 180ms ease;
+  }
+  .nav-open .sidebar {
+    transform: none;
+  }
+  .nav-open .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: oklch(0 0 0 / 25%);
+  }
+  .menu-button {
+    display: grid;
+  }
+  .window-buttons .app > main > header {
+    padding-left: 84px;
+  }
+  .crumb-folder,
+  footer .path {
+    display: none;
+  }
+  .row .row-action {
+    display: grid;
+  }
+  .row .row-count {
+    display: none;
+  }
+}
+
+/* ---------- Presentation ----------
+   A slide is laid out at 960 by 540 and scaled to the box that shows
+   it, so the sizes below are the same in a thumbnail, on the stage and
+   on a projector, and "fits" means the same everywhere. */
+.slide {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--card-foreground);
+}
+.slide-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  width: 960px;
+  height: 540px;
+  padding: 53px 62px 58px;
+  transform-origin: 0 0;
+  transform: scale(var(--slide-scale, 1));
+}
+.slide-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: clip;
+}
+/* The blocks take the room the slide's footnotes leave. */
+.slide-body > div:first-child {
+  flex: 1;
+  min-height: 0;
+  overflow: clip;
+}
+.slide .doc {
+  min-height: 100%;
+  font-size: 21px;
+  line-height: 1.45;
+}
+.slide .doc > * {
+  margin-block: 8px;
+}
+.slide .doc h1,
+.slide .doc h2 {
+  margin: 0 0 20px;
+  font-size: 37px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.slide .doc h3 {
+  margin: 14px 0 4px;
+}
+.slide .doc li {
+  margin-block: 6px;
+}
+.slide .doc li::marker {
+  color: var(--tint);
+}
+.slide .doc table {
+  font-size: 0.8em;
+}
+.slide .doc th {
+  font-size: 0.9em;
+}
+.slide .doc .code-block pre,
+.slide .doc pre {
+  font-size: 15px;
+}
+.slide-small .doc {
+  font-size: 17px;
+}
+.slide-small .doc h1,
+.slide-small .doc h2 {
+  margin-bottom: 14px;
+  font-size: 32px;
+}
+.slide-foot {
+  position: absolute;
+  right: 62px;
+  bottom: 24px;
+  left: 62px;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Title: everything in the middle, under a short rule. */
+.slide-title .doc,
+.slide-quote .doc {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.slide-title .doc::before {
+  content: "";
+  flex: none;
+  width: 58px;
+  height: 4px;
+  margin-bottom: 14px;
+  border-radius: 4px;
+  background: var(--tint);
+}
+.slide-title .doc h1,
+.slide-title .doc h2 {
+  max-width: 80%;
+  margin: 0 0 12px;
+  font-size: 52px;
+}
+.slide-title .doc > p {
+  font-size: 19px;
+  color: var(--muted-foreground);
+}
+/* A line above the title: the occasion. */
+.slide-title .doc > p:has(~ :is(h1, h2)) {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tint-foreground);
+}
+
+/* Big number: heading 1 is the figure, in the middle of what the heading leaves. */
+.slide-big .doc {
+  display: flex;
+  flex-direction: column;
+}
+.slide-big .doc > h2:first-child,
+.slide-big .doc > :last-child {
+  margin-bottom: auto;
+}
+.slide-big .doc h1 {
+  margin: 0 0 14px;
+  font-size: 125px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--tint);
+  font-variant-numeric: tabular-nums;
+}
+.slide-big .doc > p {
+  max-width: 60%;
+  font-size: 22px;
+}
+
+/* Quote: the quote large, who said it small under it. */
+.slide-quote .doc blockquote {
+  max-width: 85%;
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+  font-size: 35px;
+  line-height: 1.3;
+  font-weight: 500;
+  text-wrap: balance;
+}
+.slide-quote .doc blockquote > p:first-child::before {
+  content: "“";
+  color: var(--tint);
+}
+.slide-quote .doc blockquote > p:first-child::after {
+  content: "”";
+  color: var(--tint);
+}
+.slide-quote .doc blockquote > p + p,
+.slide-quote .doc > p {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+
+/* The stage: the slide being worked on. */
+.stage-wrap {
+  min-height: 100%;
+  background: color-mix(in srgb, var(--muted) 70%, var(--card));
+}
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 28px 32px 48px;
+}
+.stage > .slide {
+  border-radius: 8px;
+  box-shadow:
+    0 1px 3px oklch(14.5% 0.008 326 / 8%),
+    0 0 0 1px var(--border);
+}
+.stage > .slide-over::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 18%;
+  border-bottom: 3px solid var(--warning);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--warning) 22%, transparent)
+  );
+  pointer-events: none;
+}
+.fit-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: 0 0 0 1px var(--border);
+  font-size: 12px;
+}
+.fit-pill::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.fit-pill-over {
+  background: color-mix(in srgb, var(--warning) 12%, var(--card));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--warning) 40%, transparent);
+}
+.fit-pill-over::before {
+  background: var(--warning);
+}
+
+/* Presenting: one slide on a black screen. */
+.presenter {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: #000;
+  outline: none;
+  cursor: default;
+}
+.presenter > .slide {
+  width: min(100vw, calc(100vh * 16 / 9));
+  border-radius: 0;
+}
+.presenter-close,
+.presenter-count {
+  position: fixed;
+  color: #fff;
+  font-size: 12px;
+}
+.presenter-close {
+  top: 12px;
+  right: 12px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 12%);
+  opacity: 0.6;
+}
+.presenter-close:hover {
+  opacity: 1;
+}
+.presenter-count {
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0.5;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 860px) {
+  .stage {
+    padding: 16px 16px 40px;
+  }
+}
+@media (max-width: 520px) {
+  .present-label {
+    display: none;
+  }
+}
+
+/* ---------- Learners: who signed in to a published tutorial ---------- */
+.learners {
+  max-height: min(50vh, 420px);
+  margin-top: 12px;
+  overflow-y: auto;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+}
+.learners details {
+  border-bottom: 1px solid var(--border);
+}
+.learners summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  padding: 4px 2px;
+  cursor: pointer;
+  list-style: none;
+}
+.learners summary::-webkit-details-marker {
+  display: none;
+}
+.learners .who {
+  min-width: 0;
+  flex: 1;
+}
+.learners .who span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.learners .meta {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.learners .work {
+  margin: 2px 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--muted);
+}
+.learners .work pre {
+  margin: 4px 0 0;
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.learners .work .file {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 4px;
+}
+.learners .work .file .name {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.learners .grade {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.learners .grade .line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+.learners .grade .grow {
+  min-width: 0;
+  flex: 1;
+}
+.learners .grade .of {
+  min-width: 3.5em;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.learners .grade input,
+.learners .grade textarea {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+  outline: none;
+}
+.learners .grade input {
+  width: 4.5em;
+  height: 28px;
+  padding: 0 6px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.learners .grade textarea {
+  min-height: 52px;
+  padding: 6px 8px;
+  resize: vertical;
+}
+.learners .grade input:focus,
+.learners .grade textarea:focus {
+  border-color: var(--primary-edge);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-fill) 18%, transparent);
+}
+.confirm:has(.learners) {
+  width: min(36rem, calc(100vw - 2rem));
+}
+
+/* ---------- Export ---------- */
+.confirm:has(.dialog-wide) {
+  width: min(28rem, calc(100vw - 2rem));
+}
+
+/* ---------- PDF export ----------
+   What an export prints sits next to the app: out of sight on the
+   screen, and the only thing on paper. It is laid out at fixed widths,
+   so what was measured on the screen holds on paper. */
+.print-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 672px;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+  color-scheme: light;
+  background: #fff;
+  color: var(--foreground);
+  font-size: 14px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.print-root.print-slides {
+  width: 960px;
+}
+.print-root .doc {
+  font-size: 11pt;
+  line-height: 1.55;
+}
+.print-title {
+  margin: 0 0 14px;
+  font-size: 24pt;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.print-part {
+  break-before: page;
+}
+.print-root > section:first-of-type {
+  break-before: auto;
+}
+.print-contents {
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 11pt;
+  line-height: 1.9;
+}
+.print-contents .print-folder {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+/* Slides. In a PDF of slides each one is a sheet; on paper each is a picture. */
+.print-slide {
+  break-inside: avoid;
+}
+.print-slides .print-slide {
+  width: 960px;
+  height: 540px;
+  overflow: hidden;
+  break-after: page;
+}
+.print-slides .print-slide:last-child {
+  break-after: auto;
+}
+.print-root .slide {
+  border-radius: 0;
+  /* One box that a sheet takes whole or not at all. */
+  contain: strict;
+}
+.print-paper .print-slide {
+  width: 640px;
+  margin: 0 0 18px;
+}
+.print-paper .slide {
+  border: 1px solid var(--border);
+}
+.print-notes {
+  margin: 8px 0 0;
+  font-size: 10pt;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: color-mix(in srgb, var(--foreground) 80%, var(--muted-foreground));
+}
+
+/* On paper nothing scrolls and nothing opens: show all of it. */
+.print-root .doc pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.print-root .doc .tableWrapper {
+  overflow: visible;
+}
+.print-root .doc .toggle > button::before {
+  transform: rotate(90deg);
+}
+.print-root .doc :is(h1, h2, h3) {
+  break-after: avoid;
+}
+.print-root .doc :is(pre, blockquote, table, .callout, li) {
+  break-inside: avoid;
+}
+/* A slide is one picture: nothing in it moves to the next sheet. */
+.print-root .slide .doc * {
+  break-inside: auto;
+  break-after: auto;
+}
+
+/* Tutorial blocks as handouts. */
+.print-block {
+  margin: 12px 0;
+  padding: 10px 14px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  break-inside: avoid;
+}
+.print-block > * {
+  margin: 6px 0;
+}
+.print-block-kind {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 9pt;
+  font-weight: 600;
+  color: var(--tint);
+}
+.print-block-kind span {
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+.print-block-title {
+  font-weight: 600;
+}
+.print-block-hint {
+  font-size: 9pt;
+  color: var(--muted-foreground);
+}
+.print-block ul {
+  padding-left: 20px;
+}
+.print-block ul.print-options {
+  padding: 0;
+  list-style: none;
+}
+.print-options li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 5px 0;
+}
+.print-box {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--muted-foreground);
+  border-radius: 2px;
+  transform: translateY(1px);
+}
+.print-box.print-round {
+  border-radius: 50%;
+}
+.print-terms {
+  margin: 6px 0;
+}
+.print-terms > div {
+  display: grid;
+  grid-template-columns: 30% 1fr;
+  gap: 12px;
+  padding: 4px 0;
+  border-top: 1px solid var(--border);
+}
+.print-terms > div:first-child {
+  border-top: 0;
+}
+.print-terms dt {
+  font-weight: 600;
+}
+.print-terms dd {
+  margin: 0;
+}
+.print-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.print-blanks {
+  line-height: 2;
+  white-space: pre-wrap;
+}
+.print-gap {
+  display: inline-block;
+  width: 84px;
+  margin: 0 3px;
+  border-bottom: 1px solid var(--foreground);
+}
+.print-rubric {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10pt;
+}
+.print-root .print-rubric td {
+  padding: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+.print-rubric td:last-child {
+  text-align: right;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+}
+
+@media print {
+  html,
+  body {
+    height: auto;
+    background: #fff;
+  }
+  body:has(> .print-root) > :not(.print-root) {
+    display: none !important;
+  }
+  .print-root {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    visibility: visible;
+  }
+}
+
+/* ---------- History ---------- */
+.confirm.history-dialog {
+  width: min(56rem, calc(100vw - 2rem));
+  height: min(38rem, calc(100vh - 4rem));
+}
+.confirm.history-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.history-body {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: 13rem minmax(0, 1fr);
+}
+.history-list {
+  overflow-y: auto;
+  padding: 4px;
+  border-right: 1px solid var(--border);
+}
+.history-view {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+}
+.history-lines {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 8px 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.diff-line {
+  padding: 0 12px 0 calc(12px + 1.4em);
+  text-indent: -1.4em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.diff-sign {
+  display: inline-block;
+  width: 1.4em;
+  color: var(--muted-foreground);
+  user-select: none;
+}
+.diff-added {
+  background: oklch(72% 0.14 150 / 14%);
+}
+.diff-added .diff-sign {
+  color: oklch(52% 0.13 150);
+}
+.diff-removed {
+  background: oklch(62% 0.19 25 / 12%);
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+  text-decoration-color: oklch(62% 0.19 25 / 45%);
+}
+.diff-removed .diff-sign {
+  color: oklch(55% 0.19 25);
+  text-decoration: none;
+}
+.diff-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+.diff-swatch.diff-removed {
+  background: oklch(62% 0.19 25 / 35%);
+}
+.diff-swatch.diff-added {
+  background: oklch(72% 0.14 150 / 40%);
+}
+.diff-skip {
+  margin: 4px 0;
+  padding: 2px 12px 2px calc(12px + 1.4em);
+  text-indent: 0;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 11px;
+}
+@media (max-width: 640px) {
+  .history-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 9rem minmax(0, 1fr);
+  }
+  .history-list {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+}

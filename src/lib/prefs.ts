@@ -1,0 +1,63 @@
+export { countWords } from "@scholarkit/editor/lib/page-file";
+export type Mode = "visual" | "markdown";
+
+/** Small things this browser remembers; the app works without them. */
+function remember(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Storage is full or off.
+  }
+}
+
+function recall(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+export const loadMode = (): Mode =>
+  recall("cursive.mode") === "markdown" ? "markdown" : "visual";
+export const saveMode = (mode: Mode) => remember("cursive.mode", mode);
+
+export const loadOpenPage = () => recall("cursive.page");
+export const saveOpenPage = (path: string) => remember("cursive.page", path);
+
+/** The project folder the desktop app had open last. */
+export const loadFolder = () => recall("cursive.folder");
+export const saveFolder = (path: string) => remember("cursive.folder", path);
+export function forgetFolder(): void {
+  try {
+    localStorage.removeItem("cursive.folder");
+  } catch {
+    // Storage is off.
+  }
+}
+
+export function loadClosedFolders(): string[] {
+  try {
+    const value: unknown = JSON.parse(recall("cursive.closed") ?? "[]");
+    return Array.isArray(value) ? value.filter((v) => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+}
+export const saveClosedFolders = (paths: string[]) =>
+  remember("cursive.closed", JSON.stringify(paths));
+
+/** The sidebar's width, in pixels. */
+export const loadSidebarWidth = () => Number(recall("cursive.sidebar-width")) || 248;
+export const saveSidebarWidth = (width: number) =>
+  remember("cursive.sidebar-width", String(width));
+
+/** Words in a text, for the status bar. */
+
+/** The kind of file the reader exported last. */
+export const loadExportFormat = () => recall("cursive.export-format");
+export const saveExportFormat = (format: string) =>
+  remember("cursive.export-format", format);
+export const loadExportPaper = () => recall("cursive.export-paper");
+export const saveExportPaper = (paper: string) =>
+  remember("cursive.export-paper", paper);

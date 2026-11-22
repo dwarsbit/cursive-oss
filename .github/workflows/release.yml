@@ -1,0 +1,194 @@
+name: Release
+
+# Builds the installers of a version and publishes its GitHub Release. Scholarkit's Cursive
+# release workflow starts it: it sets the version, mirrors the release commit here with the
+# tag vX.Y.Z, and runs this on that tag. See docs/releasing.md.
+#
+# The release is a draft, with the version's changelog section as notes, until the
+# installers for every platform are attached; then it is published as the latest one. If a
+# build fails, the draft and the tag stay: re-run the failed jobs. Deleting the draft and the
+# tag here doesn't undo the release commit in Scholarkit.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release-id: ${{ steps.release.outputs.id }}
+      notes: ${{ steps.notes.outputs.notes }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      # Windows installers (MSI) only take numeric versions, so no pre-releases.
+      - name: Check the tag
+        run: |
+          if [ "$GITHUB_REF_TYPE" != tag ]; then
+            echo "::error::Run this workflow on a tag vX.Y.Z (got $GITHUB_REF)."
+            exit 1
+          fi
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid tag '$TAG': expected vX.Y.Z"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v7
+
+      # Installed apps only take an update signed with the key whose public half is in
+      # tauri.conf.json. See packages/updates/README.md in Scholarkit.
+      - name: Check the updater key
+        env:
+          HAS_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+        run: |
+          if grep -q UPDATER_PUBLIC_KEY_NOT_SET src-tauri/tauri.conf.json; then
+            echo "::error::src-tauri/tauri.conf.json has no updater public key yet (plugins.updater.pubkey)."
+            exit 1
+          fi
+          if [ "$HAS_KEY" != true ]; then
+            echo "::error::The TAURI_SIGNING_PRIVATE_KEY secret is missing, so the update files can't be signed."
+            exit 1
+          fi
+
+      # The release notes are the version's section of the changelog. The apps show them in
+      # What's new, from latest.json.
+      - name: Read the release notes
+        id: notes
+        run: |
+          awk -v v="${TAG#v}" '
+            $0 ~ "^## v?" v "( |$)" { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          {
+            echo "notes<<END_OF_NOTES"
+            cat notes.md
+            echo "END_OF_NOTES"
+          } >> "$GITHUB_OUTPUT"
+
+      # A re-run finds the draft of its first run.
+      - name: Create the draft GitHub Release
+        id: release
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq ".[] | select(.tag_name == \"$TAG\" and .draft) | .id" | head -n 1)
+          if [ -z "$id" ]; then
+            id=$(gh api "repos/$GITHUB_REPOSITORY/releases" \
+              -f tag_name="$TAG" -f name="Cursive $TAG" \
+              -F body=@notes.md -F draft=true --jq .id)
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: ${{ matrix.os }}
+    needs: prepare
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            args: "--target aarch64-apple-darwin"
+          - os: macos-latest
+            args: "--target x86_64-apple-darwin"
+          - os: ubuntu-latest
+            args: ""
+          - os: windows-latest
+            args: ""
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+
+      # Signs and notarizes the macOS builds once the APPLE_* secrets exist;
+      # without them the builds stay unsigned. Exported only when set, since
+      # an empty APPLE_CERTIFICATE makes the Tauri bundler fail.
+      - name: Configure macOS signing
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "::warning::APPLE_CERTIFICATE not set; macOS build will be unsigned"
+            exit 0
+          fi
+          for name in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name secret is missing"
+              exit 1
+            fi
+            echo "$name=${!name}" >> "$GITHUB_ENV"
+          done
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libdbus-1-dev patchelf
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Signs the update files with the updater key and adds them, with latest.json, to the
+      # release. latest.json lists each platform's update and its signature; the apps get it
+      # from the Scholarkit server, which reads it here.
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          releaseId: ${{ needs.prepare.outputs.release-id }}
+          releaseBody: ${{ needs.prepare.outputs.notes }}
+          includeUpdaterJson: true
+          args: ${{ matrix.args }}
+
+  # The release stays a draft while the builds upload to it, so nobody
+  # downloads a half-finished release; it is published once all succeed.
+  publish:
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.prepare.outputs.release-id }}
+        run: |
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
+            -F draft=false -F prerelease=false -f make_latest=true --silent

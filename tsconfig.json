@@ -1,0 +1,13 @@
+{
+  "extends": "@scholarkit/tsconfig/react-vite.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": false,
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
