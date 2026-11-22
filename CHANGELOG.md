@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.1 (unreleased)
+## 0.3.1 (2026-11-22)
 
 - The desktop app keeps itself up to date. It checks for a new version when it starts and once a day, downloads it in the background and shows **Update ready**. Choose **Restart now** to install it; your work is saved first. **What’s new** lists the changes. Turn the check off, or check now, under **Settings**, in **Updates**. This version is the last one you download by hand.
 - Share a project with others: click Share in the header, enter their email address and choose "Can edit" or "Can read". They get an email with a link to join. As the owner you change someone's role, remove them or cancel an invite in the same dialog; someone you invited sees who is in the project and can leave it. In the desktop app, sync the project to your account first.
