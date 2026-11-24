@@ -118,6 +118,13 @@ function Projects({ account }: { account: Account }) {
         <header className="flex items-center gap-2">
           <Mark className="size-[22px] flex-none" />
           <h1 className="flex-1 text-sm font-semibold">{t("Cursive")}</h1>
+          {/* The Scholarkit home page: every app's projects in one list. */}
+          <a
+            href="/"
+            className="mr-2 text-xs text-muted-foreground hover:text-foreground"
+          >
+            {t("Scholarkit home")}
+          </a>
           <a
             href="/account"
             className="text-xs text-muted-foreground hover:text-foreground"

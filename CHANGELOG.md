@@ -5,6 +5,7 @@
 - The plans are now Free, Plus and Pro, with a student price on Plus. Learner accounts and grading on your published sites come with Pro.
 - When something goes wrong, Cursive sends us an error report so we can fix it: what failed and where in its code, never your text, file names or email address. In the desktop app, turn it off under **Settings**, in **Error reports**.
 - In the desktop app, your Zotero cloud key stays inside the app and goes only to zotero.org. A link that could run code instead of opening a page, mail or Zotero shows as plain text, in footnotes too.
+- In the browser, **Scholarkit home** on the list of projects opens your Scholarkit home page. It lists everything in your account, from Binder, Polemic and Cursive, in one place.
 
 ## 0.3.1 (2026-11-22)
 
