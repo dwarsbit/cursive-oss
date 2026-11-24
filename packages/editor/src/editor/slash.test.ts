@@ -1,17 +1,31 @@
 // @vitest-environment happy-dom
 import { Editor, type JSONContent } from "@tiptap/core";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { BLOCKS } from "./blocks";
 import { documentExtensions } from "./extensions";
 import { insertBlock } from "./slash";
 
+// Every editor made here, destroyed after each test: a live editor's view keeps a timer that
+// can fire after happy-dom is torn down, and fails the run with "document is not defined".
+const editors: Editor[] = [];
+afterEach(() => {
+  for (const editor of editors.splice(0)) editor.destroy();
+});
+
+function track(editor: Editor) {
+  editors.push(editor);
+  return editor;
+}
+
 /** An editor with "/query" typed on a line of its own, and its range. */
 function typed(query: string) {
-  const editor = new Editor({
-    extensions: documentExtensions(),
-    content: `Before\n\n/${query}`,
-    contentType: "markdown",
-  });
+  const editor = track(
+    new Editor({
+      extensions: documentExtensions(),
+      content: `Before\n\n/${query}`,
+      contentType: "markdown",
+    }),
+  );
   const end = editor.state.doc.content.size - 1;
   // The caret is right after what was typed, as it is in the menu.
   editor.commands.setTextSelection(end);

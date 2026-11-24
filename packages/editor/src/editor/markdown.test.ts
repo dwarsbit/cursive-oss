@@ -1,17 +1,31 @@
 // @vitest-environment happy-dom
 import { Editor, type JSONContent } from "@tiptap/core";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { documentExtensions } from "./extensions";
 import { addTableCaption, newTargetId, numberingOf } from "./numbering";
 import { readPage, tidyMarkdown } from "../lib/page-file";
 import { SAMPLE_PAGE, SAMPLE_PROJECT } from "./sample";
 
+// Every editor made here, destroyed after each test: a live editor's view keeps a timer that
+// can fire after happy-dom is torn down, and fails the run with "document is not defined".
+const editors: Editor[] = [];
+afterEach(() => {
+  for (const editor of editors.splice(0)) editor.destroy();
+});
+
+function track(editor: Editor) {
+  editors.push(editor);
+  return editor;
+}
+
 function editorFor(markdown: string) {
-  return new Editor({
-    extensions: documentExtensions(),
-    content: markdown,
-    contentType: "markdown",
-  });
+  return track(
+    new Editor({
+      extensions: documentExtensions(),
+      content: markdown,
+      contentType: "markdown",
+    }),
+  );
 }
 
 // As the app saves a page: no runs of blank lines.
