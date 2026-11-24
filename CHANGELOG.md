@@ -3,6 +3,7 @@
 ## 0.4.1 (unreleased)
 
 - In the browser, the Scholarkit icon at the top left of the list of projects opens your Scholarkit home page. It replaces the **Scholarkit home** link.
+- In the browser, your projects are at `app.scholarkit.app/cursive/projects`. Links and bookmarks to the old address keep working.
 
 ## 0.4.0 (2026-11-24)
 

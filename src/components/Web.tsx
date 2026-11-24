@@ -22,20 +22,15 @@ import { serverStore } from "@/lib/server-store";
 import { type Template, templatePages } from "@/templates";
 import { Mark } from "./Mark";
 import { ScholarkitHome } from "./ScholarkitHome";
+import { webAddresses } from "@/lib/web-address";
 import { TemplateDialog } from "./TemplateDialog";
 import { t } from "@scholarkit/i18n";
 import { saveBeforeSwitch } from "@/lib/languages";
 
 const server = new Server(browserTransport);
 
-/** Where the app is served: "/cursive/". */
-const BASE = import.meta.env.BASE_URL;
-
-/** The project in the address, or null on the projects list. */
-const projectIn = (path: string) =>
-  path.startsWith(BASE)
-    ? decodeURIComponent(path.slice(BASE.length).split("/")[0]) || null
-    : null;
+/** The app's addresses: the list at /cursive/projects, one project at /cursive/projects/<id>. */
+const ADDRESS = webAddresses(import.meta.env.BASE_URL);
 
 const subscribeToAddress = (listener: () => void) => {
   window.addEventListener("popstate", listener);
@@ -106,7 +101,7 @@ function Projects({ account }: { account: Account }) {
         "online",
       );
       if (template) await fill(project.id, templatePages(template.id));
-      go(`${BASE}${project.id}`);
+      go(ADDRESS.of(project.id));
     } catch (error) {
       setProblem(messageOf(error));
       setBusy(false);
@@ -191,11 +186,11 @@ function Projects({ account }: { account: Account }) {
             {projects.map((project) => (
               <li key={project.id} className="border-b last:border-b-0">
                 <a
-                  href={`${BASE}${project.id}`}
+                  href={ADDRESS.of(project.id)}
                   onClick={(event) => {
                     if (event.metaKey || event.ctrlKey || event.shiftKey) return;
                     event.preventDefault();
-                    go(`${BASE}${project.id}`);
+                    go(ADDRESS.of(project.id));
                   }}
                   className="flex h-9 items-center gap-3 px-3 text-[13px] hover:bg-muted"
                 >
@@ -290,7 +285,7 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
     <>
       <App
         store={store}
-        onSwitchProject={() => go(BASE)}
+        onSwitchProject={() => go(ADDRESS.list)}
         onRenameProject={
           info?.role === "owner"
             ? async (name) => setInfo(await server.renameProject(id, name))
@@ -329,7 +324,7 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
           server={server}
           project={info}
           me={account}
-          onLeft={() => go(BASE)}
+          onLeft={() => go(ADDRESS.list)}
           onClose={() => setSharing(false)}
         />
       )}
@@ -348,11 +343,23 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
 
 /**
  * Cursive in the browser, on the Scholarkit server: the account's
- * projects at /cursive/, one project at /cursive/<id>. Signed out, it
+ * projects at /cursive/projects, one project at /cursive/projects/<id>. Signed out, it
  * goes to the server's sign-in page and comes back.
  */
 export function Web() {
   const path = useSyncExternalStore(subscribeToAddress, () => window.location.pathname);
+
+  // One address for the list, and old links (/cursive/<id>) land on the project's new address.
+  useEffect(() => {
+    const better = ADDRESS.better(path);
+    if (better === null) return;
+    window.history.replaceState(
+      null,
+      "",
+      better + window.location.search + window.location.hash,
+    );
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, [path]);
   const [account, setAccount] = useState<Account | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -390,7 +397,7 @@ export function Web() {
     );
   }
 
-  const id = projectIn(path);
+  const id = ADDRESS.idIn(path);
   return id ? (
     <OpenProject key={id} id={id} account={account} />
   ) : (
