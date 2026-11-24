@@ -119,7 +119,7 @@ now you run it from the source, as described under [Develop](#develop).
 - **Progress for readers**: on a published tutorial, readers check their
   answers, see their points and mark pages as complete. The correct answers
   stay on the server until a quiz is answered.
-- **Learners and grading** (paid plan): readers sign in with a Polemic
+- **Learners and grading** (Pro plan): readers sign in with a Scholarkit
   account to keep their progress and hand in assignments as text or a file.
   You see their work under **Publish → Learners**, give points per
   criterion and write feedback.
