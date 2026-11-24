@@ -26,6 +26,7 @@
     "@hocuspocus/provider": "4.7.1",
     "@scholarkit/editor": "workspace:*",
     "@scholarkit/i18n": "workspace:*",
+    "@scholarkit/monitoring": "workspace:*",
     "@scholarkit/updates": "workspace:*",
     "@tauri-apps/api": "^2.12.4",
     "@tauri-apps/plugin-dialog": "^2.8.4",
@@ -43,6 +44,7 @@
   "devDependencies": {
     "@scholarkit/eslint-config": "workspace:*",
     "@scholarkit/tsconfig": "workspace:*",
+    "@sentry/vite-plugin": "catalog:",
     "@tailwindcss/vite": "^4.3.5",
     "@tauri-apps/cli": "^2.12.4",
     "@types/katex": "^0.16.8",

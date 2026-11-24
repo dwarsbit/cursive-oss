@@ -51,6 +51,7 @@
     "./lib/platform": "./src/lib/platform.ts",
     "./lib/pointer-drag": "./src/lib/pointer-drag.ts",
     "./lib/properties": "./src/lib/properties.ts",
+    "./lib/safe-href": "./src/lib/safe-href.ts",
     "./lib/project-doc": "./src/lib/project-doc.ts",
     "./lib/search": "./src/lib/search.ts",
     "./lib/sync": "./src/lib/sync.ts",

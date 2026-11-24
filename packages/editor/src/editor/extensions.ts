@@ -1,4 +1,5 @@
 import type { AnyExtension } from "@tiptap/core";
+import { isSafeHref } from "../lib/safe-href";
 import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
 import { Highlight } from "@tiptap/extension-highlight";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
@@ -36,7 +37,12 @@ export function documentExtensions(
     StarterKit.configure({
       codeBlock: false,
       heading: { levels: [1, 2, 3] },
-      link: { openOnClick: false, autolink: true },
+      // Only links safe to follow are shown as links (see safeHref).
+      link: {
+        openOnClick: false,
+        autolink: true,
+        isAllowedUri: (url) => isSafeHref(url),
+      },
       dropcursor: { color: "var(--tint)", width: 2 },
     }),
     overrides.codeBlock ?? CodeBlockLowlight.configure({ lowlight }),

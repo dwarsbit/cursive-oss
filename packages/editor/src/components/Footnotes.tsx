@@ -1,4 +1,5 @@
 import type { Editor, JSONContent } from "@tiptap/core";
+import { isSafeHref, safeHref } from "../lib/safe-href";
 import { useEditorState } from "@tiptap/react";
 import katex from "katex";
 import { useMemo, type ReactNode } from "react";
@@ -55,10 +56,12 @@ function inline(
     let out: ReactNode = node.text ?? "";
     for (const mark of node.marks ?? []) {
       if (mark.type === "link") {
+        // A link that isn't safe to follow stays plain text.
+        if (!isSafeHref(String(mark.attrs?.href ?? ""))) continue;
         out = (
           <a
             key={key}
-            href={String(mark.attrs?.href ?? "")}
+            href={safeHref(String(mark.attrs?.href ?? ""))}
             target="_blank"
             rel="noreferrer"
           >

@@ -4,6 +4,7 @@ import { startLanguage } from "@scholarkit/i18n";
 import { isDesktop } from "@scholarkit/editor/lib/platform";
 import { invoke } from "@tauri-apps/api/core";
 import { catalogs } from "./lib/languages";
+import { startMonitoring } from "./lib/monitoring";
 import "./index.css";
 
 // The theme follows the system until the app has its own setting.
@@ -32,6 +33,7 @@ void start();
  * load, so they load once it is set.
  */
 async function start() {
+  void startMonitoring();
   await startLanguage({ loaders: catalogs, dev: import.meta.env.DEV });
   const [
     { default: App },

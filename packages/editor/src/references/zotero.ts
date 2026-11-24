@@ -6,6 +6,7 @@ import {
   type ReferenceType,
 } from "./reference";
 import { t } from "@scholarkit/i18n";
+import { isDesktop } from "../lib/platform";
 
 /**
  * Zotero, as Polemic connects to it (dwarsbit/polemic, src/lib/zotero.ts):
@@ -58,6 +59,14 @@ export interface ZoteroGroup {
   name: string;
   enabled: boolean;
 }
+
+/**
+ * What a Zotero cloud source's `apiKey` reads in the desktop app when a
+ * key is kept. The key itself stays in the system's credential store, so
+ * a script in the webview can't send it anywhere; requests with it go
+ * through the desktop app (see `webAnswer`). Saving it back keeps the key.
+ */
+export const KEPT_KEY = "\u2022".repeat(8);
 
 /** A place to search: the Zotero app or a library at zotero.org, with the groups picked in Settings. */
 export type ZoteroSource =
@@ -213,14 +222,33 @@ async function localGet(path: string, query: URLSearchParams): Promise<unknown> 
   return JSON.parse(body) as unknown;
 }
 
-async function webGet(
-  source: Extract<ZoteroSource, { kind: "cloud" }>,
+/** What zotero.org answered, however it was asked. */
+interface WebAnswer {
+  status: number;
+  body: string;
+}
+
+/**
+ * One GET of zotero.org. In the desktop app a kept key (KEPT_KEY) is
+ * added by the app, which asks zotero.org itself; a key typed in, or one
+ * kept in the browser, is sent from here.
+ */
+async function webAnswer(
+  source: { id: string; apiKey: string },
   path: string,
   query: URLSearchParams,
-): Promise<unknown> {
+): Promise<WebAnswer | null> {
+  if (isDesktop && source.apiKey === KEPT_KEY) {
+    return invoke<WebAnswer>("zotero_cloud_fetch", {
+      id: source.id,
+      path,
+      query: query.toString(),
+    }).catch(() => null);
+  }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
-  const response = await fetch(`${WEB}/${path}?${query}`, {
+  const search = query.toString();
+  const response = await fetch(`${WEB}/${path}${search ? `?${search}` : ""}`, {
     signal: controller.signal,
     headers: {
       Accept: "application/json",
@@ -230,14 +258,24 @@ async function webGet(
   })
     .catch(() => null)
     .finally(() => clearTimeout(timer));
-  if (!response) throw new Error(t("zotero.org didn't answer. Check your connection."));
-  if (response.status === 403)
+  if (!response) return null;
+  return { status: response.status, body: await response.text() };
+}
+
+async function webGet(
+  source: Extract<ZoteroSource, { kind: "cloud" }>,
+  path: string,
+  query: URLSearchParams,
+): Promise<unknown> {
+  const answer = await webAnswer(source, path, query);
+  if (!answer) throw new Error(t("zotero.org didn't answer. Check your connection."));
+  if (answer.status === 403)
     throw new Error(t("Zotero turned the key down. Check it in Settings."));
-  if (!response.ok)
+  if (answer.status < 200 || answer.status >= 300)
     throw new Error(
-      t("Zotero answered {status}. Try again later.", { status: response.status }),
+      t("Zotero answered {status}. Try again later.", { status: answer.status }),
     );
-  return (await response.json()) as unknown;
+  return JSON.parse(answer.body) as unknown;
 }
 
 /** One GET of a library's items: `path` is what follows the library, like `items/top`. */
@@ -396,17 +434,21 @@ export async function zoteroAppAnswers(): Promise<boolean> {
 
 /**
  * Checks an API key: Zotero says whose it is, which fills in the user
- * ID. Null when the key is wrong or zotero.org can't be reached.
+ * ID. A kept key (KEPT_KEY) is the one kept for `sourceId`. Null when
+ * the key is wrong or zotero.org can't be reached.
  */
 export async function checkZoteroKey(
   apiKey: string,
+  sourceId = "",
 ): Promise<{ userId: string; username: string } | null> {
   try {
-    const response = await fetch(`${WEB}/keys/${encodeURIComponent(apiKey.trim())}`, {
-      headers: { Accept: "application/json", "Zotero-API-Version": "3" },
-    });
-    if (!response.ok) return null;
-    const data = (await response.json()) as { userID?: number; username?: string };
+    const answer = await webAnswer(
+      { id: sourceId, apiKey: apiKey.trim() },
+      "keys/current",
+      new URLSearchParams(),
+    );
+    if (!answer || answer.status < 200 || answer.status >= 300) return null;
+    const data = JSON.parse(answer.body) as { userID?: number; username?: string };
     if (data.userID === undefined) return null;
     return { userId: String(data.userID), username: data.username ?? "" };
   } catch {

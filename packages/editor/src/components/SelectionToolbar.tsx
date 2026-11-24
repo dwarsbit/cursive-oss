@@ -1,4 +1,5 @@
 import type { Editor } from "@tiptap/core";
+import { safeHref } from "../lib/safe-href";
 import { useEditorState } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import {
@@ -45,11 +46,14 @@ function ToolButton({
 
 const Divider = () => <span className="mx-1 h-[18px] w-px bg-border" />;
 
-/** A link's address as typed, with https:// added when it has no scheme. */
+/**
+ * A link's address as typed, with https:// added when it has no scheme.
+ * Empty for a scheme a link may not have, such as `javascript:`.
+ */
 export function normalizeHref(input: string): string {
   const href = input.trim();
   if (!href) return "";
-  if (/^(?:[a-z][a-z0-9+.-]*:|\/|#)/i.test(href)) return href;
+  if (/^(?:[a-z][a-z0-9+.-]*:|\/|#)/i.test(href)) return safeHref(href);
   return `https://${href}`;
 }
 

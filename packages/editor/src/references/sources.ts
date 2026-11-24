@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 import { isDesktop } from "../lib/platform";
 import { bibtexReferences } from "./bibtex";
 import type { Reference } from "./reference";
-import type { ZoteroGroup, ZoteroSource } from "./zotero";
+import { KEPT_KEY, type ZoteroGroup, type ZoteroSource } from "./zotero";
 import { t } from "@scholarkit/i18n";
 
 /**
@@ -95,7 +95,7 @@ function writeStored(list: Source[]): void {
 
 const emit = () => listeners.forEach((listener) => listener());
 
-/** Reads the sources and, in the desktop app, their keys. */
+/** Reads the sources and, in the desktop app, whether their keys are kept. */
 export async function loadSources(): Promise<Source[]> {
   if (loaded) return sources;
   const stored = readStored();
@@ -114,10 +114,12 @@ export async function loadSources(): Promise<Source[]> {
         return { id: entry.id, kind: "app", enabled: entry.enabled !== false, groups };
       let apiKey = entry.apiKey ?? "";
       if (isDesktop) {
-        apiKey =
-          (await invoke<string | null>("zotero_key_get", { id: entry.id }).catch(
-            () => null,
-          )) ?? "";
+        // The key stays in the credential store: the webview only learns
+        // that it is there.
+        const kept = await invoke<boolean>("zotero_key_kept", { id: entry.id }).catch(
+          () => false,
+        );
+        apiKey = kept ? KEPT_KEY : "";
       }
       return {
         id: entry.id,
@@ -138,7 +140,7 @@ export async function loadSources(): Promise<Source[]> {
 /** Adds a source or puts it in place of the one with its id. */
 export async function saveSource(source: Source): Promise<void> {
   await loadSources();
-  if (source.kind === "cloud" && isDesktop) {
+  if (source.kind === "cloud" && isDesktop && source.apiKey !== KEPT_KEY) {
     await invoke("zotero_key_set", { id: source.id, key: source.apiKey });
   }
   const at = sources.findIndex((other) => other.id === source.id);

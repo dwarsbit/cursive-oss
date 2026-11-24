@@ -82,14 +82,73 @@ fn key_entry(id: &str) -> Result<keyring::Entry, String> {
     keyring::Entry::new("cursive", &format!("zotero:{id}")).map_err(|e| e.to_string())
 }
 
-/// The API key of a Zotero cloud source, if one is kept.
+/// Whether a Zotero cloud source has a key in the credential store. The
+/// key itself never goes to the webview: a script there could send it
+/// anywhere. Requests that need it go through `zotero_cloud_fetch`.
 #[tauri::command]
-pub fn zotero_key_get(id: String) -> Result<Option<String>, String> {
+pub fn zotero_key_kept(id: String) -> Result<bool, String> {
     match key_entry(&id)?.get_password() {
-        Ok(value) => Ok(Some(value)),
-        Err(keyring::Error::NoEntry) => Ok(None),
+        Ok(value) => Ok(!value.is_empty()),
+        Err(keyring::Error::NoEntry) => Ok(false),
         Err(e) => Err(e.to_string()),
     }
+}
+
+/// The address of one read of the Zotero web API: a path such as
+/// `users/123/items/top` or `keys/current` on api.zotero.org, nowhere else.
+fn cloud_url(path: &str, query: &str) -> Result<url::Url, String> {
+    let invalid = || "invalid Zotero request".to_string();
+    let path_ok = !path.is_empty()
+        && path
+            .split('/')
+            .all(|part| !part.is_empty() && part.chars().all(|c| c.is_ascii_alphanumeric()));
+    if !path_ok {
+        return Err(invalid());
+    }
+    let mut url =
+        url::Url::parse(&format!("https://api.zotero.org/{path}")).map_err(|_| invalid())?;
+    url.set_query(Some(query).filter(|q| !q.is_empty()));
+    if url.host_str() != Some("api.zotero.org") {
+        return Err(invalid());
+    }
+    Ok(url)
+}
+
+/// What zotero.org answered: the webview words the errors.
+#[derive(serde::Serialize)]
+pub struct CloudAnswer {
+    status: u16,
+    body: String,
+}
+
+/// One GET of the Zotero web API with a source's kept key, added here.
+#[tauri::command]
+pub async fn zotero_cloud_fetch(
+    id: String,
+    path: String,
+    query: String,
+) -> Result<CloudAnswer, String> {
+    let url = cloud_url(&path, &query)?;
+    let key = match key_entry(&id)?.get_password() {
+        Ok(key) => key,
+        Err(keyring::Error::NoEntry) => String::new(),
+        Err(e) => return Err(e.to_string()),
+    };
+    let response = reqwest::Client::new()
+        .get(url)
+        .header("Accept", "application/json")
+        .header("Zotero-API-Key", key)
+        .header("Zotero-API-Version", "3")
+        .timeout(Duration::from_secs(8))
+        .send()
+        .await
+        .map_err(|_| "zotero.org didn't answer. Check your connection.".to_string())?;
+    let status = response.status().as_u16();
+    let body = response
+        .text()
+        .await
+        .map_err(|_| "zotero.org didn't answer. Check your connection.".to_string())?;
+    Ok(CloudAnswer { status, body })
 }
 
 #[tauri::command]
@@ -142,6 +201,35 @@ pub fn bibtex_read(path: String) -> Result<String, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cloud_requests_only_reach_zotero() {
+        assert_eq!(
+            cloud_url("users/42/items/top", "format=json&limit=100")
+                .unwrap()
+                .as_str(),
+            "https://api.zotero.org/users/42/items/top?format=json&limit=100"
+        );
+        assert_eq!(
+            cloud_url("keys/current", "").unwrap().as_str(),
+            "https://api.zotero.org/keys/current"
+        );
+        for path in [
+            "",
+            "/users/1",
+            "users/../keys",
+            "users//1",
+            "@evil.example/x",
+            "users/1?x=y",
+            "a.b/c",
+        ] {
+            assert!(cloud_url(path, "").is_err(), "{path}");
+        }
+        assert!(cloud_url("users/1/items", "a#b")
+            .unwrap()
+            .fragment()
+            .is_none());
+    }
 
     #[test]
     fn reads_only_bib_files() {

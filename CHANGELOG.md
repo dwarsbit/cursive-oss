@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.0 (unreleased)
+
+- When something goes wrong, Cursive sends us an error report so we can fix it: what failed and where in its code, never your text, file names or email address. In the desktop app, turn it off under **Settings**, in **Error reports**.
+- In the desktop app, your Zotero cloud key stays inside the app and goes only to zotero.org. A link that could run code instead of opening a page, mail or Zotero shows as plain text, in footnotes too.
+
 ## 0.3.1 (2026-11-22)
 
 - The desktop app keeps itself up to date. It checks for a new version when it starts and once a day, downloads it in the background and shows **Update ready**. Choose **Restart now** to install it; your work is saved first. **What’s new** lists the changes. Turn the check off, or check now, under **Settings**, in **Updates**. This version is the last one you download by hand.

@@ -379,3 +379,16 @@ describe("Markdown round trip", () => {
     expect(doc.content?.[0].type).toBe("blockquote");
   });
 });
+
+describe("Links that aren't safe to follow", () => {
+  it("show as text, whatever the Markdown says", () => {
+    const editor = editorFor(
+      "[run](javascript:alert(1)) [mail](mailto:ada@example.org) [page](notes/plan.md)",
+    );
+    const html = editor.getHTML();
+    expect(html).not.toContain("javascript:");
+    expect(html).toContain('href="mailto:ada@example.org"');
+    expect(html).toContain('href="notes/plan.md"');
+    expect(editor.commands.setLink({ href: "javascript:alert(1)" })).toBe(false);
+  });
+});

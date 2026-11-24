@@ -1,4 +1,5 @@
 mod account;
+mod crash;
 mod export;
 mod files;
 mod history;
@@ -24,7 +25,12 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .manage(export::LastExport::default())
+        .setup(|app| {
+            crash::install(app.handle());
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
+            crash::take_last_crash,
             project::project_load,
             project::project_write_page,
             project::project_create_folder,
@@ -56,7 +62,8 @@ pub fn run() {
             files::link_upload_file,
             files::link_download_file,
             zotero::zotero_local_fetch,
-            zotero::zotero_key_get,
+            zotero::zotero_key_kept,
+            zotero::zotero_cloud_fetch,
             zotero::zotero_key_set,
             zotero::zotero_key_delete,
             zotero::bibtex_read,

@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { t } from "@scholarkit/i18n";
+import { isSafeHref } from "./safe-href";
 
 /** Is this the desktop app, not the browser build? */
 export const isDesktop =
@@ -45,6 +46,7 @@ export function formatOpened(time: number, now = new Date()): string {
 
 /** Opens a web address in the browser: the system's, in the desktop app. */
 export function openExternal(url: string): void {
+  if (!isSafeHref(url)) return;
   if (!isDesktop) {
     window.open(url, "_blank", "noopener");
     return;

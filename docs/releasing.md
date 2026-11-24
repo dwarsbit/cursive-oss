@@ -60,3 +60,8 @@ The browser build is not part of a release: Scholarkit's **Cursive web
 image** workflow pushes it to `ghcr.io/dwarsbit/scholarkit-cursive-web`
 from every change on `main`, and the services serve that image at
 `/cursive`.
+
+The builds report errors to Sentry once the `SENTRY_DSN` variable is set in
+dwarsbit/cursive-oss, and send their source maps there once the `SENTRY_AUTH_TOKEN`
+secret and the `SENTRY_ORG` and `SENTRY_PROJECT` variables are set too.
+Without them a release sends no reports; builds from a fork never do.
