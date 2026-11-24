@@ -21,6 +21,7 @@ import {
 import { serverStore } from "@/lib/server-store";
 import { type Template, templatePages } from "@/templates";
 import { Mark } from "./Mark";
+import { ScholarkitHome } from "./ScholarkitHome";
 import { TemplateDialog } from "./TemplateDialog";
 import { t } from "@scholarkit/i18n";
 import { saveBeforeSwitch } from "@/lib/languages";
@@ -113,18 +114,12 @@ function Projects({ account }: { account: Account }) {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="relative h-full overflow-y-auto">
+      <ScholarkitHome className="absolute top-2 left-3" />
       <div className="mx-auto max-w-xl px-4 py-10">
         <header className="flex items-center gap-2">
           <Mark className="size-[22px] flex-none" />
           <h1 className="flex-1 text-sm font-semibold">{t("Cursive")}</h1>
-          {/* The Scholarkit home page: every app's projects in one list. */}
-          <a
-            href="/"
-            className="mr-2 text-xs text-muted-foreground hover:text-foreground"
-          >
-            {t("Scholarkit home")}
-          </a>
           <a
             href="/account"
             className="text-xs text-muted-foreground hover:text-foreground"

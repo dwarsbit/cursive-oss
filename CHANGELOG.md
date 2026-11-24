@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1 (unreleased)
+
+- In the browser, the Scholarkit icon at the top left of the list of projects opens your Scholarkit home page. It replaces the **Scholarkit home** link.
+
 ## 0.4.0 (2026-11-24)
 
 - The plans are now Free, Plus and Pro, with a student price on Plus. Learner accounts and grading on your published sites come with Pro.
