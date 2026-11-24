@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 (unreleased)
+## 0.4.0 (2026-11-24)
 
 - The plans are now Free, Plus and Pro, with a student price on Plus. Learner accounts and grading on your published sites come with Pro.
 - When something goes wrong, Cursive sends us an error report so we can fix it: what failed and where in its code, never your text, file names or email address. In the desktop app, turn it off under **Settings**, in **Error reports**.
