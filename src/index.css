@@ -2,6 +2,7 @@
 @import "@scholarkit/editor/tokens.css";
 @import "@scholarkit/editor/editor.css";
 @import "@scholarkit/updates/updates.css";
+@import "@scholarkit/account-menu/account-menu.css";
 
 /* ---------- Shell: the sidebar on the backdrop, the page as a card ---------- */
 .app {

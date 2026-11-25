@@ -14,6 +14,20 @@ export interface Account {
   id: string;
   name: string;
   email: string;
+  /** The plan: free, plus or pro. A server from before plans leaves it out. */
+  plan?: string;
+  /** The photo from Google, Apple or Microsoft sign-in; null for email accounts. */
+  image?: string | null;
+}
+
+/** GET /api/usage: what the signed-in account uses of its plan. */
+export interface Usage {
+  plan?: string;
+  storage: { usedBytes: number; limitBytes: number };
+  /** The share of today's compile time used, 0 to 100. */
+  compile: { usedPercent: number; resetsAt?: string };
+  /** limit is null: unlimited. */
+  reviewLinks: { count: number; limit: number | null };
 }
 
 /** The app a project belongs to on the server. */
@@ -144,6 +158,20 @@ export class AccountServer {
       return await this.call<Account>("GET", "/api/me");
     } catch (error) {
       if (error instanceof ServerError && error.status === 401) return null;
+      throw error;
+    }
+  }
+
+  /** What the account uses of its plan; null when nobody is signed in, or from a server without plans. */
+  async usage(): Promise<Usage | null> {
+    try {
+      return await this.call<Usage>("GET", "/api/usage");
+    } catch (error) {
+      if (
+        error instanceof ServerError &&
+        (error.status === 401 || error.status === 404)
+      )
+        return null;
       throw error;
     }
   }

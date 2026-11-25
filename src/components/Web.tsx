@@ -30,6 +30,9 @@ import { saveBeforeSwitch } from "@/lib/languages";
 
 const server = new Server(browserTransport);
 
+/** The account's usage for the account menu. */
+const loadUsage = () => server.usage();
+
 /** The app's addresses: the list at /cursive/projects, one project at /cursive/projects/<id>. */
 const ADDRESS = webAddresses(import.meta.env.BASE_URL);
 
@@ -49,8 +52,10 @@ const openUrl = (url: string) => void window.open(url, "_blank", "noopener");
 const accountMenu = (account: Account) => (
   <AccountMenu
     account={account}
+    loadUsage={loadUsage}
     external={false}
     onManage={() => window.location.assign("/account")}
+    onUpgrade={() => window.location.assign("/account#plan")}
     onSignOut={async () => {
       await server.signOut();
       window.location.assign("/sign-in");

@@ -1,197 +1,74 @@
-import { ExternalLink, LogOut, RefreshCw, RefreshCwOff, UserRound } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { cn } from "@scholarkit/editor/lib/cn";
-import type { Account } from "@/lib/server";
-import { messageOf } from "@scholarkit/editor/components/Dialog";
+import { RefreshCw, RefreshCwOff } from "lucide-react";
+import { AccountMenu as Menu, type MenuAction } from "@scholarkit/account-menu";
+import type { Account, Usage } from "@scholarkit/editor/lib/account";
 import { t } from "@scholarkit/i18n";
 
-/** First and last name as two letters: "Anna de Vries" is AV. */
-function initialsOf(name: string): string {
-  const letters = name
-    .split(/\s+/)
-    .map((word) => [...word][0] ?? "")
-    .filter((letter) => /\p{L}|\p{N}/u.test(letter));
-  const picked =
-    letters.length > 2 ? [letters[0], letters[letters.length - 1]] : letters;
-  return picked.join("").toUpperCase();
-}
-
-export function Avatar({ name, large }: { name?: string; large?: boolean }) {
-  const initials = name ? initialsOf(name) : "";
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "grid flex-none place-items-center rounded-full font-semibold",
-        large ? "size-9 text-[13px]" : "size-7 text-[11px]",
-        initials
-          ? "bg-primary-fill text-primary-foreground"
-          : "bg-muted text-muted-foreground",
-      )}
-    >
-      {initials || <UserRound className="size-4" />}
-    </span>
-  );
-}
-
-const ITEM =
-  "flex h-7 w-full items-center gap-2 rounded-md px-2 text-left hover:bg-accent disabled:opacity-50 [&>svg]:size-3.5 [&>svg]:flex-none [&>svg]:text-muted-foreground";
-
 /**
- * The signed-in account at the end of the header, as in Polemic and
- * Binder: the avatar opens who is signed in, whether the open project
- * syncs (in the desktop app), the account page and Sign out.
+ * The signed-in account at the end of the header, the same menu as in Binder, Polemic and on
+ * the Scholarkit home page: who is signed in, the plan with its usage, whether the open project
+ * syncs (in the desktop app), Upgrade, the account page and Sign out.
  */
 export function AccountMenu({
   account,
+  loadUsage,
   linked,
   onLink,
   onUnlink,
   onManage,
+  onUpgrade,
   external = true,
   onSignOut,
 }: {
   /** The signed-in account; null while its name can't be fetched. */
   account: Account | null;
+  /** GET /api/usage, each time the menu opens. */
+  loadUsage?: () => Promise<Usage | null>;
   /** Whether the open project syncs with the account; undefined in the browser, where it always does. */
   linked?: boolean;
   onLink?: () => Promise<void>;
   onUnlink?: () => Promise<void>;
   onManage: () => void;
+  /** Opens the plan on the account page. */
+  onUpgrade?: () => void;
   /** Whether the account page opens in the browser, outside the app. */
   external?: boolean;
   onSignOut: () => Promise<void>;
 }) {
-  const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
-  const root = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const close = (event: Event) => {
-      if (event instanceof KeyboardEvent) {
-        if (event.key === "Escape") setOpen(false);
-      } else if (!root.current?.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", close);
-    document.addEventListener("keydown", close);
-    return () => {
-      document.removeEventListener("pointerdown", close);
-      document.removeEventListener("keydown", close);
-    };
-  }, [open]);
-
-  /** Runs a menu item's work. The menu closes when it worked, and says why when it didn't. */
-  const run = async (work: () => Promise<void>) => {
-    setBusy(true);
-    setProblem(null);
-    try {
-      await work();
-      setOpen(false);
-    } catch (error) {
-      setProblem(messageOf(error));
-    } finally {
-      setBusy(false);
-    }
-  };
-
+  const syncs = linked !== undefined && onLink && onUnlink;
+  const actions: MenuAction[] = !syncs
+    ? []
+    : linked
+      ? [
+          {
+            label: t("Stop syncing this project"),
+            icon: <RefreshCwOff aria-hidden />,
+            run: onUnlink,
+          },
+        ]
+      : [
+          {
+            label: t("Sync this project to your account"),
+            icon: <RefreshCw aria-hidden />,
+            run: onLink,
+          },
+        ];
   return (
-    <div ref={root} className="relative flex-none">
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        aria-label={t("Scholarkit account")}
-        title={account ? `${account.name} (${account.email})` : t("Scholarkit account")}
-        onClick={() => {
-          setProblem(null);
-          setOpen(!open);
-        }}
-        className="block rounded-full"
-      >
-        <Avatar name={account?.name} />
-      </button>
-      {open && (
-        <div
-          role="menu"
-          aria-label={t("Scholarkit account")}
-          className="popover absolute top-full right-0 z-20 mt-1.5 w-72 p-1 text-[13px]"
-        >
-          <div className="flex items-center gap-3 px-2 pt-2 pb-3">
-            <Avatar name={account?.name} large />
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{account?.name ?? t("Signed in")}</p>
-              {account && (
-                <p className="truncate text-xs text-muted-foreground">
-                  {account.email}
-                </p>
-              )}
-            </div>
-          </div>
-          {linked !== undefined && onLink && onUnlink && (
-            <>
-              <div className="border-t px-2 pt-2 pb-1 text-xs text-muted-foreground">
-                {linked
-                  ? t("This project syncs with your account.")
-                  : t("This project is only on this computer.")}
-              </div>
-              {linked ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={ITEM}
-                  disabled={busy}
-                  onClick={() => void run(onUnlink)}
-                >
-                  <RefreshCwOff aria-hidden />
-                  {t("Stop syncing this project")}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={ITEM}
-                  disabled={busy}
-                  onClick={() => void run(onLink)}
-                >
-                  <RefreshCw aria-hidden />
-                  {t("Sync this project to your account")}
-                </button>
-              )}
-            </>
-          )}
-          {problem && (
-            <p className="px-2 py-1 text-xs text-destructive" role="alert">
-              {problem}
-            </p>
-          )}
-          <div className="my-1 border-t" />
-          <button
-            type="button"
-            role="menuitem"
-            className={ITEM}
-            onClick={() => {
-              onManage();
-              setOpen(false);
-            }}
-          >
-            <UserRound aria-hidden />
-            <span className="flex-1">{t("Manage account")}</span>
-            {external && <ExternalLink aria-hidden />}
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            className={ITEM}
-            disabled={busy}
-            onClick={() => void run(onSignOut)}
-          >
-            <LogOut aria-hidden />
-            {t("Sign out")}
-          </button>
-        </div>
-      )}
-    </div>
+    <Menu
+      account={account && { ...account, photo: account.image }}
+      plan={account?.plan}
+      loadUsage={loadUsage}
+      note={
+        syncs
+          ? linked
+            ? t("This project syncs with your account.")
+            : t("This project is only on this computer.")
+          : undefined
+      }
+      actions={actions}
+      onManage={onManage}
+      onUpgrade={onUpgrade}
+      external={external}
+      onSignOut={onSignOut}
+    />
   );
 }

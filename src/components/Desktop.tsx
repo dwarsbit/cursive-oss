@@ -34,6 +34,15 @@ import { saveBeforeSwitch } from "@/lib/languages";
 
 const server = new Server(desktopTransport);
 
+/** The account's usage for the account menu. */
+const loadUsage = () => server.usage();
+
+/** Opens a page of the account on the Scholarkit server, in the browser. */
+const openAccountPage = (path: string) =>
+  void invoke<string>("account_server")
+    .then((url) => invoke("open_in_browser", { url: `${url}${path}` }))
+    .catch(() => {});
+
 const fail = (error: unknown): never => {
   throw new Error(typeof error === "string" ? error : String(error));
 };
@@ -461,14 +470,12 @@ export function Desktop() {
             {signedIn ? (
               <AccountMenu
                 account={account}
+                loadUsage={loadUsage}
                 linked={Boolean(session.projectId)}
                 onLink={link}
                 onUnlink={unlink}
-                onManage={() =>
-                  void invoke<string>("account_server").then((url) =>
-                    openUrl(`${url}/account`),
-                  )
-                }
+                onManage={() => openAccountPage("/account")}
+                onUpgrade={() => openAccountPage("/account#plan")}
                 onSignOut={signOut}
               />
             ) : (

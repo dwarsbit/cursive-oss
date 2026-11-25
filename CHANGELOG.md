@@ -8,6 +8,7 @@
 - **Settings** moved from the top of the page to the bottom of the sidebar, as in Binder.
 - While a project opens, you see Cursive's layout with a spinner where the project appears, as in Polemic and Binder.
 - In the browser, your projects are at `app.scholarkit.app/cursive/projects`. Links and bookmarks to the old address keep working.
+- The menu under your avatar is the same in Cursive, Polemic, Binder and on your Scholarkit home page. It shows your plan, the storage you use, how much of today's cloud compile time you've used and your active review links, with **Upgrade to Plus** on Free and **Upgrade to Pro** on Plus.
 
 ## 0.4.0 (2026-11-24)
 
