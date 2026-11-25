@@ -175,6 +175,9 @@
   "Your pages become a site that anyone with the address can read. Publish again to bring the site up to date. Pages with a quiz or an assignment make it a tutorial: readers check their answers and track their progress.": "Your pages become a site that anyone with the address can read. Publish again to bring the site up to date. Pages with a quiz or an assignment make it a tutorial: readers check their answers and track their progress.",
   "Address": "Address",
   "3 to 40 lowercase letters, digits and hyphens.": "3 to 40 lowercase letters, digits and hyphens.",
+  "Your sites are listed on {page}.": "Your sites are listed on {page}.",
+  "We made the username @{username} from your name. Your sites will be listed on {page}.": "We made the username @{username} from your name. Your sites will be listed on {page}.",
+  "Change username": "Change username",
   "Theme": "Theme",
   "Publish again to give the site this theme.": "Publish again to give the site this theme.",
   "Published {day} · {count} pages": {

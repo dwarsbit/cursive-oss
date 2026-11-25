@@ -345,6 +345,7 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
           server={server}
           projectId={id}
           openUrl={openUrl}
+          openAccount={() => openUrl("/account")}
           saveFile={browserSaveFile}
           onClose={() => setPublishing(false)}
         />

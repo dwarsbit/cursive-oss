@@ -511,6 +511,11 @@ export function Desktop() {
             }
           }}
           openUrl={openUrl}
+          openAccount={() =>
+            void invoke<string>("account_server").then((url) =>
+              openUrl(`${url}/account`),
+            )
+          }
           saveFile={desktopSaveFile}
           onClose={() => setDialog(null)}
         />

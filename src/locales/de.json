@@ -175,6 +175,9 @@
   "Your pages become a site that anyone with the address can read. Publish again to bring the site up to date. Pages with a quiz or an assignment make it a tutorial: readers check their answers and track their progress.": "Deine Seiten werden zu einer Website, die alle mit der Adresse lesen können. Veröffentliche erneut, um die Website zu aktualisieren. Seiten mit einem Quiz oder einer Abgabe machen daraus ein Tutorial: Lesende prüfen ihre Antworten und verfolgen ihren Fortschritt.",
   "Address": "Adresse",
   "3 to 40 lowercase letters, digits and hyphens.": "3 bis 40 Kleinbuchstaben, Ziffern und Bindestriche.",
+  "Your sites are listed on {page}.": "Deine Websites stehen auf {page}.",
+  "We made the username @{username} from your name. Your sites will be listed on {page}.": "Wir haben den Benutzernamen @{username} aus deinem Namen gemacht. Deine Websites stehen dann auf {page}.",
+  "Change username": "Benutzernamen ändern",
   "Theme": "Design",
   "Publish again to give the site this theme.": "Veröffentliche erneut, um der Website dieses Design zu geben.",
   "Published {day} · {count} pages": {

@@ -183,6 +183,9 @@
   "Your pages become a site that anyone with the address can read. Publish again to bring the site up to date. Pages with a quiz or an assignment make it a tutorial: readers check their answers and track their progress.": "Vos pages deviennent un site que toute personne ayant l’adresse peut lire. Publiez de nouveau pour mettre le site à jour. Les pages avec un quiz ou un devoir en font un tutoriel : les lecteurs vérifient leurs réponses et suivent leur progression.",
   "Address": "Adresse",
   "3 to 40 lowercase letters, digits and hyphens.": "3 à 40 lettres minuscules, chiffres et traits d’union.",
+  "Your sites are listed on {page}.": "Vos sites sont listés sur {page}.",
+  "We made the username @{username} from your name. Your sites will be listed on {page}.": "Nous avons créé le nom d’utilisateur @{username} à partir de votre nom. Vos sites seront listés sur {page}.",
+  "Change username": "Changer de nom d’utilisateur",
   "Theme": "Thème",
   "Publish again to give the site this theme.": "Publiez de nouveau pour donner ce thème au site.",
   "Published {day} · {count} pages": {

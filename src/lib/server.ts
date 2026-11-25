@@ -35,8 +35,14 @@ export interface Site {
 export interface SiteState {
   site: Site | null;
   suggestedSlug: string;
-  /** What every site's address starts with. */
+  /** The owner's username, or the one the first publish gives them. A server from before usernames leaves it out. */
+  username?: string;
+  /** Whether the owner has the username yet: false until their first publish. */
+  usernameSaved?: boolean;
+  /** What the owner's site addresses start with: <sites host>/@<username>/. */
   baseUrl: string;
+  /** The page that lists the owner's sites. */
+  ownerPageUrl?: string;
 }
 
 /** What a learner handed in for an assignment of a published tutorial. */

@@ -17,6 +17,9 @@ import {
 } from "@/lib/site-themes";
 import { t, tn } from "@scholarkit/i18n";
 
+/** An address as people say it: without the scheme. */
+const shortUrl = (url: string) => url.replace(/^https?:\/\//, "");
+
 const day = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", {
     month: "short",
@@ -94,6 +97,7 @@ export function PublishDialog({
   projectId,
   prepare,
   openUrl,
+  openAccount,
   saveFile,
   onClose,
 }: {
@@ -101,6 +105,8 @@ export function PublishDialog({
   projectId: string;
   prepare?: () => Promise<void>;
   openUrl: (url: string) => void;
+  /** Opens the account page, where the username is changed. */
+  openAccount: () => void;
   saveFile: SaveFile;
   onClose: () => void;
 }) {
@@ -143,7 +149,8 @@ export function PublishDialog({
     run(async () => {
       await prepare?.();
       const site = await server.publish(projectId, slug.trim().toLowerCase(), theme);
-      setState((known) => known && { ...known, site });
+      // The first publish saves the username the dialog proposed.
+      setState((known) => known && { ...known, site, usernameSaved: true });
       setSlug(site.slug);
     });
 
@@ -199,6 +206,28 @@ export function PublishDialog({
           <p className="mt-1 text-xs text-muted-foreground">
             {t("3 to 40 lowercase letters, digits and hyphens.")}
           </p>
+          {state.username && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              {state.usernameSaved
+                ? t("Your sites are listed on {page}.", {
+                    page: shortUrl(state.ownerPageUrl ?? state.baseUrl),
+                  })
+                : t(
+                    "We made the username @{username} from your name. Your sites will be listed on {page}.",
+                    {
+                      username: state.username,
+                      page: shortUrl(state.ownerPageUrl ?? state.baseUrl),
+                    },
+                  )}{" "}
+              <button
+                type="button"
+                className="font-medium text-foreground underline underline-offset-2"
+                onClick={openAccount}
+              >
+                {t("Change username")}
+              </button>
+            </p>
+          )}
 
           <fieldset className="mt-3">
             <legend className="text-xs font-medium">{t("Theme")}</legend>
@@ -228,7 +257,7 @@ export function PublishDialog({
             className="font-medium text-primary underline underline-offset-2"
             onClick={() => openUrl(site.url)}
           >
-            {site.url.replace(/^https?:\/\//, "")}
+            {shortUrl(site.url)}
           </button>
           <span className="mt-0.5 block text-xs text-muted-foreground">
             {tn(
