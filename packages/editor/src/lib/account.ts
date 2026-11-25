@@ -148,6 +148,11 @@ export class AccountServer {
     }
   }
 
+  /** Signs out the browser's session, on the Scholarkit server's own pages. */
+  async signOut(): Promise<void> {
+    await this.call("POST", "/api/auth/sign-out", { json: {} });
+  }
+
   /** The account's projects of this app, newest first. */
   async projects(): Promise<ServerProject[]> {
     const list = await this.call<{ projects: ServerProject[] }>(

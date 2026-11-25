@@ -9,6 +9,7 @@
     "*.css"
   ],
   "exports": {
+    "./components/AppShell": "./src/components/AppShell.tsx",
     "./components/CiteMenu": "./src/components/CiteMenu.tsx",
     "./components/CodeBlockView": "./src/components/CodeBlockView.tsx",
     "./components/ContextMenu": "./src/components/ContextMenu.tsx",

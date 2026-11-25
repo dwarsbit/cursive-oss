@@ -8,6 +8,7 @@ import {
   Presentation,
   Trash2,
   Search,
+  Settings,
 } from "lucide-react";
 import { createContext, useContext, useRef, useState } from "react";
 import { cn } from "@scholarkit/editor/lib/cn";
@@ -19,6 +20,7 @@ import {
   type MenuAt,
   type MenuEntry,
 } from "@scholarkit/editor/components/ContextMenu";
+import { HomeMark } from "@scholarkit/editor/components/AppShell";
 import { messageOf } from "@scholarkit/editor/components/Dialog";
 import { Mark } from "./Mark";
 import { t } from "@scholarkit/i18n";
@@ -85,8 +87,11 @@ export interface SidebarProps {
   /** Opens another project; only where the app can. */
   onSwitchProject?: () => void;
   switchLabel?: string;
+  /** Where the app's icon goes: the Scholarkit home in the browser. Without it the icon opens another project. */
+  homeHref?: string;
   /** Opens the search across the project's pages. */
   onSearch?: () => void;
+  onSettings: () => void;
 }
 
 function RowButton({
@@ -611,7 +616,18 @@ export function Sidebar(props: SidebarProps) {
         className="sidebar-head flex h-11 flex-none items-center gap-1 px-2 text-sm font-semibold"
         onPointerDown={dragWindow}
       >
-        <Mark className="mark mr-1 size-[22px] flex-none" />
+        <HomeMark
+          className="mark"
+          href={props.homeHref}
+          onClick={props.homeHref ? undefined : props.onSwitchProject}
+          label={
+            props.homeHref
+              ? t("Scholarkit home")
+              : (props.switchLabel ?? t("All projects"))
+          }
+        >
+          <Mark className="size-[22px]" />
+        </HomeMark>
         <ProjectName name={props.projectName} onRename={props.onRenameProject} />
         {props.onSwitchProject && (
           <button
@@ -683,6 +699,16 @@ export function Sidebar(props: SidebarProps) {
             <Rows {...props} nodes={props.tree} depth={0} />
           )}
         </TreeContext.Provider>
+      </div>
+      <div className="flex-none border-t pt-1">
+        <button
+          type="button"
+          onClick={props.onSettings}
+          className="row w-full gap-2 px-2 text-left"
+        >
+          <Settings className="size-3.5 flex-none text-muted-foreground" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">{t("Settings")}</span>
+        </button>
       </div>
       {props.onResize && (
         <Resizer width={props.width ?? SIDEBAR_WIDTH} onResize={props.onResize} />

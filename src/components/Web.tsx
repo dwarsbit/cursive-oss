@@ -21,7 +21,8 @@ import {
 import { serverStore } from "@/lib/server-store";
 import { type Template, templatePages } from "@/templates";
 import { Mark } from "./Mark";
-import { ScholarkitHome } from "./ScholarkitHome";
+import { AccountMenu } from "./AccountMenu";
+import { AppLoading, HomeMark } from "@scholarkit/editor/components/AppShell";
 import { webAddresses } from "@/lib/web-address";
 import { TemplateDialog } from "./TemplateDialog";
 import { t } from "@scholarkit/i18n";
@@ -43,6 +44,19 @@ function go(path: string) {
 }
 
 const openUrl = (url: string) => void window.open(url, "_blank", "noopener");
+
+/** The avatar at the end of the header, as in the desktop app, without its syncing: here the account holds every project. */
+const accountMenu = (account: Account) => (
+  <AccountMenu
+    account={account}
+    external={false}
+    onManage={() => window.location.assign("/account")}
+    onSignOut={async () => {
+      await server.signOut();
+      window.location.assign("/sign-in");
+    }}
+  />
+);
 
 const day = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", {
@@ -109,18 +123,14 @@ function Projects({ account }: { account: Account }) {
   };
 
   return (
-    <div className="relative h-full overflow-y-auto">
-      <ScholarkitHome className="absolute top-2 left-3" />
+    <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-xl px-4 py-10">
-        <header className="flex items-center gap-2">
-          <Mark className="size-[22px] flex-none" />
+        <header className="flex items-center gap-1">
+          <HomeMark href="/" label={t("Scholarkit home")}>
+            <Mark className="size-[22px]" />
+          </HomeMark>
           <h1 className="flex-1 text-sm font-semibold">{t("Cursive")}</h1>
-          <a
-            href="/account"
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
-            {account.name}
-          </a>
+          {accountMenu(account)}
         </header>
 
         <h2 className="mt-8 text-lg font-semibold">{t("Projects")}</h2>
@@ -286,6 +296,7 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
       <App
         store={store}
         onSwitchProject={() => go(ADDRESS.list)}
+        homeHref="/"
         onRenameProject={
           info?.role === "owner"
             ? async (name) => setInfo(await server.renameProject(id, name))
@@ -315,6 +326,7 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
                   {t("Publish")}
                 </button>
               )}
+              {accountMenu(account)}
             </>
           )
         }
@@ -377,21 +389,30 @@ export function Web() {
   }, []);
 
   if (!account) {
+    const retry = problem && (
+      <button type="button" className={BUTTON} onClick={() => window.location.reload()}>
+        {t("Try again")}
+      </button>
+    );
+    // A project opens into its layout; the list has none to show yet.
+    if (ADDRESS.idIn(path)) {
+      return (
+        <AppLoading
+          mark={<Mark className="size-[22px]" />}
+          failed={Boolean(problem)}
+          status={problem ?? t("Opening Cursive…")}
+        >
+          {retry}
+        </AppLoading>
+      );
+    }
     return (
       <div className="grid h-full place-items-center p-6 text-center">
-        <div>
+        <div className="flex flex-col items-center gap-3">
           <p className="text-sm text-muted-foreground" role="status">
             {problem ?? t("Opening Cursive…")}
           </p>
-          {problem && (
-            <button
-              type="button"
-              className={`${BUTTON} mt-3`}
-              onClick={() => window.location.reload()}
-            >
-              {t("Try again")}
-            </button>
-          )}
+          {retry}
         </div>
       </div>
     );

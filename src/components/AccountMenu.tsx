@@ -23,13 +23,13 @@ export function Avatar({ name, large }: { name?: string; large?: boolean }) {
       aria-hidden
       className={cn(
         "grid flex-none place-items-center rounded-full font-semibold",
-        large ? "size-9 text-[13px]" : "size-6 text-[10px]",
+        large ? "size-9 text-[13px]" : "size-7 text-[11px]",
         initials
           ? "bg-primary-fill text-primary-foreground"
           : "bg-muted text-muted-foreground",
       )}
     >
-      {initials || <UserRound className={large ? "size-4" : "size-3.5"} />}
+      {initials || <UserRound className="size-4" />}
     </span>
   );
 }
@@ -38,9 +38,9 @@ const ITEM =
   "flex h-7 w-full items-center gap-2 rounded-md px-2 text-left hover:bg-accent disabled:opacity-50 [&>svg]:size-3.5 [&>svg]:flex-none [&>svg]:text-muted-foreground";
 
 /**
- * The signed-in account at the end of the header: the avatar opens who
- * is signed in, whether the open project syncs, the account page and
- * Sign out.
+ * The signed-in account at the end of the header, as in Polemic and
+ * Binder: the avatar opens who is signed in, whether the open project
+ * syncs (in the desktop app), the account page and Sign out.
  */
 export function AccountMenu({
   account,
@@ -48,15 +48,18 @@ export function AccountMenu({
   onLink,
   onUnlink,
   onManage,
+  external = true,
   onSignOut,
 }: {
   /** The signed-in account; null while its name can't be fetched. */
   account: Account | null;
-  /** Whether the open project syncs with the account. */
-  linked: boolean;
-  onLink: () => Promise<void>;
-  onUnlink: () => Promise<void>;
+  /** Whether the open project syncs with the account; undefined in the browser, where it always does. */
+  linked?: boolean;
+  onLink?: () => Promise<void>;
+  onUnlink?: () => Promise<void>;
   onManage: () => void;
+  /** Whether the account page opens in the browser, outside the app. */
+  external?: boolean;
   onSignOut: () => Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
@@ -126,33 +129,37 @@ export function AccountMenu({
               )}
             </div>
           </div>
-          <div className="border-t px-2 pt-2 pb-1 text-xs text-muted-foreground">
-            {linked
-              ? t("This project syncs with your account.")
-              : t("This project is only on this computer.")}
-          </div>
-          {linked ? (
-            <button
-              type="button"
-              role="menuitem"
-              className={ITEM}
-              disabled={busy}
-              onClick={() => void run(onUnlink)}
-            >
-              <RefreshCwOff aria-hidden />
-              {t("Stop syncing this project")}
-            </button>
-          ) : (
-            <button
-              type="button"
-              role="menuitem"
-              className={ITEM}
-              disabled={busy}
-              onClick={() => void run(onLink)}
-            >
-              <RefreshCw aria-hidden />
-              {t("Sync this project to your account")}
-            </button>
+          {linked !== undefined && onLink && onUnlink && (
+            <>
+              <div className="border-t px-2 pt-2 pb-1 text-xs text-muted-foreground">
+                {linked
+                  ? t("This project syncs with your account.")
+                  : t("This project is only on this computer.")}
+              </div>
+              {linked ? (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={ITEM}
+                  disabled={busy}
+                  onClick={() => void run(onUnlink)}
+                >
+                  <RefreshCwOff aria-hidden />
+                  {t("Stop syncing this project")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  role="menuitem"
+                  className={ITEM}
+                  disabled={busy}
+                  onClick={() => void run(onLink)}
+                >
+                  <RefreshCw aria-hidden />
+                  {t("Sync this project to your account")}
+                </button>
+              )}
+            </>
           )}
           {problem && (
             <p className="px-2 py-1 text-xs text-destructive" role="alert">
@@ -171,7 +178,7 @@ export function AccountMenu({
           >
             <UserRound aria-hidden />
             <span className="flex-1">{t("Manage account")}</span>
-            <ExternalLink aria-hidden />
+            {external && <ExternalLink aria-hidden />}
           </button>
           <button
             type="button"

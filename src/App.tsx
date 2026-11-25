@@ -1,6 +1,8 @@
-import { History, PanelLeft, Play, Settings } from "lucide-react";
+import { History, PanelLeft, Play } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Mark } from "@/components/Mark";
+import { AppLoading } from "@scholarkit/editor/components/AppShell";
 import type { Editor as TiptapEditor } from "@tiptap/core";
 import { Editor, type EditorChange } from "@scholarkit/editor/components/Editor";
 import { mergeMarkdown, type RemoteCaret } from "@scholarkit/editor/editor/collab";
@@ -142,6 +144,7 @@ export default function App({
   firstOpen,
   onSwitchProject,
   switchLabel = t("All projects"),
+  homeHref,
   onRenameProject,
   actions,
   status,
@@ -153,6 +156,8 @@ export default function App({
   /** Opens another project, where the app can. */
   onSwitchProject?: () => void;
   switchLabel?: string;
+  /** Where the app's icon goes, where the app has a page for it: the Scholarkit home in the browser. */
+  homeHref?: string;
   /** Gives the project another name, where the app can. Rejects with why not. */
   onRenameProject?: (name: string) => Promise<void>;
   /** Buttons at the end of the header: the account, publishing. */
@@ -812,24 +817,25 @@ export default function App({
 
   if (!project) {
     return (
-      <div className="grid h-full place-items-center p-6 text-center">
-        <div>
-          <p className="text-sm text-muted-foreground" role="status">
-            {problem
-              ? t("This project can't be opened: {problem}", { problem })
-              : t("Opening your project…")}
-          </p>
-          {problem && onSwitchProject && (
-            <button
-              type="button"
-              onClick={onSwitchProject}
-              className="mt-3 h-8 rounded-md border bg-background px-3 text-[13px] font-medium hover:bg-muted"
-            >
-              {switchLabel}
-            </button>
-          )}
-        </div>
-      </div>
+      <AppLoading
+        mark={<Mark className="size-[22px]" />}
+        failed={Boolean(problem)}
+        status={
+          problem
+            ? t("This project can't be opened: {problem}", { problem })
+            : t("Opening your project…")
+        }
+      >
+        {problem && onSwitchProject && (
+          <button
+            type="button"
+            onClick={onSwitchProject}
+            className="h-8 rounded-md border bg-background px-3 text-[13px] font-medium hover:bg-muted"
+          >
+            {switchLabel}
+          </button>
+        )}
+      </AppLoading>
     );
   }
 
@@ -874,7 +880,12 @@ export default function App({
         onDelete={setDeleting}
         onSwitchProject={onSwitchProject}
         switchLabel={switchLabel}
+        homeHref={homeHref}
         onSearch={() => setSearching("")}
+        onSettings={() => {
+          setNavOpen(false);
+          setSettings(true);
+        }}
       />
       <div className="scrim" onClick={() => setNavOpen(false)} />
 
@@ -962,15 +973,6 @@ export default function App({
               {t("Export")}
             </button>
           )}
-          <button
-            type="button"
-            className="inline-flex size-6 flex-none items-center justify-center rounded-[5px] text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label={t("Settings")}
-            title={t("Settings")}
-            onClick={() => setSettings(true)}
-          >
-            <Settings className="size-3.5" aria-hidden />
-          </button>
           {actions}
         </header>
 

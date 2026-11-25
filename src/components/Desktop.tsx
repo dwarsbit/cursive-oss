@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import App, { type Status } from "@/App";
 import { AccountDialog, type AccountAsk } from "@/components/AccountDialog";
 import { AccountMenu } from "@/components/AccountMenu";
+import { Mark } from "@/components/Mark";
+import { AppLoading } from "@scholarkit/editor/components/AppShell";
 import { HEADER_BUTTON } from "@scholarkit/editor/components/Dialog";
 import { ProjectPicker } from "@/components/ProjectPicker";
 import { PublishDialog } from "@/components/PublishDialog";
@@ -429,11 +431,10 @@ export function Desktop() {
 
   if (!session || session.dir !== folder) {
     return (
-      <div className="grid h-full place-items-center p-6 text-center">
-        <p className="text-sm text-muted-foreground" role="status">
-          {t("Opening your project…")}
-        </p>
-      </div>
+      <AppLoading
+        mark={<Mark className="size-[22px]" />}
+        status={t("Opening your project…")}
+      />
     );
   }
 

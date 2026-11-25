@@ -2,7 +2,10 @@
 
 ## 0.4.1 (unreleased)
 
-- In the browser, the Scholarkit icon at the top left of the list of projects opens your Scholarkit home page. It replaces the **Scholarkit home** link.
+- Cursive's icon at the top left takes you back to your projects, as in Polemic and Binder: in the browser to your Scholarkit home page, in the desktop app to the list of projects. In the browser it replaces the **Scholarkit home** link.
+- In the browser, your avatar is at the top right, as in the desktop app, Polemic and Binder. It opens **Manage account** and **Sign out**.
+- **Settings** moved from the top of the page to the bottom of the sidebar, as in Binder.
+- While a project opens, you see Cursive's layout with a spinner where the project appears, as in Polemic and Binder.
 - In the browser, your projects are at `app.scholarkit.app/cursive/projects`. Links and bookmarks to the old address keep working.
 
 ## 0.4.0 (2026-11-24)

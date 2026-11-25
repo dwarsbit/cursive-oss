@@ -110,9 +110,6 @@
 .window-buttons .sidebar-head {
   padding-left: 76px;
 }
-.window-buttons .sidebar-head .mark {
-  display: none;
-}
 .menu-button {
   display: none;
   place-items: center;
