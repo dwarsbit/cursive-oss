@@ -432,6 +432,25 @@ export function Desktop() {
         <ProjectPicker
           onOpen={openProject}
           onOpenFromAccount={() => setDialog({ ask: "projects" })}
+          account={
+            signedIn ? (
+              <AccountMenu
+                account={account}
+                loadUsage={loadUsage}
+                onManage={() => openAccountPage("/account")}
+                onUpgrade={() => openAccountPage("/account#plan")}
+                onSignOut={signOut}
+              />
+            ) : signedIn === false ? (
+              <button
+                type="button"
+                className={HEADER_BUTTON}
+                onClick={() => setDialog({ ask: "sign-in" })}
+              >
+                {t("Sign in")}
+              </button>
+            ) : undefined
+          }
         />
         {accountDialog}
       </>

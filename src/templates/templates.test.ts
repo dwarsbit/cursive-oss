@@ -57,6 +57,11 @@ describe("project templates", () => {
     }
   });
 
+  it("end the course module with an assignment", () => {
+    const all = Object.values(templatePages("course-module")).join("\n");
+    expect(fences(all, "assignment")).toHaveLength(1);
+  });
+
   it("hold what their kind is for", () => {
     for (const template of TEMPLATES) {
       const pages = Object.values(templatePages(template.id));
@@ -69,9 +74,10 @@ describe("project templates", () => {
         const quizzes = fences(all, "quiz").map(readQuiz);
         expect(quizzes.length).toBeGreaterThan(0);
         for (const quiz of quizzes) expect(quiz?.answer).toEqual([1]);
-        const [assignment] = fences(all, "assignment").map(readAssignment);
-        expect(assignment?.points).toBe(10);
-        expect(assignment?.files).toBe(true);
+        for (const assignment of fences(all, "assignment").map(readAssignment)) {
+          expect(assignment?.points).toBe(10);
+          expect(assignment?.files).toBe(true);
+        }
       }
     }
   });

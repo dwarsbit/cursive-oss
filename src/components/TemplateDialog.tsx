@@ -2,21 +2,16 @@ import { TEMPLATE_KINDS, TEMPLATES, type Template } from "@/templates";
 import { BUTTON, Dialog } from "@scholarkit/editor/components/Dialog";
 import { t } from "@scholarkit/i18n";
 
-/** The project templates by kind. Picking one makes the project. */
+/** The project templates by kind. Picking one picks it for the new project. */
 export function TemplateDialog({
-  busy,
-  problem,
   onPick,
   onClose,
 }: {
-  busy: boolean;
-  /** Why the last pick didn't make a project. */
-  problem: string | null;
   onPick: (template: Template) => void;
   onClose: () => void;
 }) {
   return (
-    <Dialog title={t("Start from a template")} onClose={onClose}>
+    <Dialog title={t("All templates")} onClose={onClose}>
       <p className="mt-1 text-xs text-muted-foreground">
         {t(
           "A template fills a new project with pages to write in. Change or delete any of them.",
@@ -34,7 +29,6 @@ export function TemplateDialog({
                   <li key={template.id}>
                     <button
                       type="button"
-                      disabled={busy}
                       onClick={() => onPick(template)}
                       className="-mx-1 block w-[calc(100%+0.5rem)] rounded-md px-2.5 py-1.5 text-left hover:bg-muted disabled:opacity-50"
                     >
@@ -52,11 +46,6 @@ export function TemplateDialog({
           </section>
         ))}
       </div>
-      {problem && (
-        <p className="mt-2 text-xs text-destructive" role="alert">
-          {problem}
-        </p>
-      )}
       <div className="mt-4 flex justify-end">
         <button type="button" className={BUTTON} onClick={onClose}>
           {t("Cancel")}

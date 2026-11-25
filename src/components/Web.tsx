@@ -1,5 +1,5 @@
 import { Send, Users } from "lucide-react";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import App, { type Status } from "@/App";
 import {
   BUTTON,
@@ -19,13 +19,19 @@ import {
   type ServerProject,
 } from "@/lib/server";
 import { serverStore } from "@/lib/server-store";
-import { type Template, templatePages } from "@/templates";
+import { templatePages } from "@/templates";
 import { Mark } from "./Mark";
 import { AccountMenu } from "./AccountMenu";
 import { AppLoading, HomeMark } from "@scholarkit/editor/components/AppShell";
 import { webAddresses } from "@/lib/web-address";
-import { TemplateDialog } from "./TemplateDialog";
+import { BLANK, StartTemplates } from "./StartTemplates";
+import {
+  START_INPUT,
+  StartFooter,
+  StartPage,
+} from "@scholarkit/editor/components/StartPage";
 import { t } from "@scholarkit/i18n";
+import { rich } from "@scholarkit/i18n/react";
 import { saveBeforeSwitch } from "@/lib/languages";
 
 const server = new Server(browserTransport);
@@ -33,7 +39,7 @@ const server = new Server(browserTransport);
 /** The account's usage for the account menu. */
 const loadUsage = () => server.usage();
 
-/** The app's addresses: the list at /cursive/projects, one project at /cursive/projects/<id>. */
+/** The app's addresses: a new project at /cursive/projects, one project at /cursive/projects/<id>. */
 const ADDRESS = webAddresses(import.meta.env.BASE_URL);
 
 const subscribeToAddress = (listener: () => void) => {
@@ -63,13 +69,6 @@ const accountMenu = (account: Account) => (
   />
 );
 
-const day = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-
 /** Writes pages to a new project and waits until the server has them. */
 async function fill(id: string, pages: Record<string, string>) {
   const store = serverStore(server, id);
@@ -96,30 +95,24 @@ async function fill(id: string, pages: Record<string, string>) {
   }
 }
 
-/** The account's Cursive projects, and a field to start a new one. */
-function Projects({ account }: { account: Account }) {
-  const [projects, setProjects] = useState<ServerProject[] | null>(null);
+/** A new project, made in the account. The Scholarkit home lists the projects. */
+function NewProject({ account }: { account: Account }) {
   const [name, setName] = useState("");
+  const [start, setStart] = useState(BLANK);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const [templates, setTemplates] = useState(false);
+  const nameInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    document.title = t("Projects · Cursive");
-    server
-      .projects()
-      .then(setProjects, (error: unknown) => setProblem(messageOf(error)));
+    document.title = t("New project · Cursive");
   }, []);
 
-  const create = async (template?: Template) => {
+  const create = async () => {
     setBusy(true);
     setProblem(null);
     try {
-      const project = await server.createProject(
-        name.trim() || template?.name || t("Notes"),
-        "online",
-      );
-      if (template) await fill(project.id, templatePages(template.id));
+      const project = await server.createProject(name.trim(), "online");
+      if (start !== BLANK) await fill(project.id, templatePages(start));
       go(ADDRESS.of(project.id));
     } catch (error) {
       setProblem(messageOf(error));
@@ -128,101 +121,59 @@ function Projects({ account }: { account: Account }) {
   };
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-xl px-4 py-10">
-        <header className="flex items-center gap-1">
-          <HomeMark href="/" label={t("Scholarkit home")}>
-            <Mark className="size-[22px]" />
-          </HomeMark>
-          <h1 className="flex-1 text-sm font-semibold">{t("Cursive")}</h1>
-          {accountMenu(account)}
-        </header>
-
-        <h2 className="mt-8 text-lg font-semibold">{t("Projects")}</h2>
-        <form
-          className="mt-3 flex gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void create();
-          }}
-        >
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder={t("Name of a new project")}
-            aria-label={t("Name of a new project")}
-            maxLength={120}
-            className="h-8 min-w-0 flex-1 rounded-md border bg-background px-2 text-[13px] outline-none focus:border-ring"
-          />
-          <button type="submit" className={PRIMARY_BUTTON} disabled={busy}>
-            {t("New project")}
-          </button>
-          <button
-            type="button"
-            className={BUTTON}
-            disabled={busy}
-            onClick={() => {
-              setProblem(null);
-              setTemplates(true);
-            }}
+    <StartPage
+      mark={<Mark className="size-11" />}
+      title={t("New Cursive project")}
+      corner={
+        <HomeMark href="/" label={t("Scholarkit home")}>
+          <Mark className="size-[22px]" />
+        </HomeMark>
+      }
+      account={accountMenu(account)}
+      below={rich("Your projects are on <0>the Scholarkit home</0>.", [
+        (text) => (
+          <a
+            href="/"
+            className="text-foreground underline underline-offset-2 hover:no-underline"
           >
-            {t("From a template…")}
-          </button>
-        </form>
-
-        {templates && (
-          <TemplateDialog
-            busy={busy}
-            problem={problem}
-            onPick={(template) => void create(template)}
-            onClose={() => setTemplates(false)}
-          />
-        )}
-        {problem && !templates && (
-          <p className="mt-3 text-[13px] text-destructive" role="alert">
+            {text}
+          </a>
+        ),
+      ])}
+    >
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          // An empty name has nothing to create: point at the field.
+          if (name.trim() === "") nameInput.current?.focus();
+          else void create();
+        }}
+      >
+        <input
+          ref={nameInput}
+          autoFocus
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder={t("Project name")}
+          aria-label={t("Project name")}
+          maxLength={120}
+          className={START_INPUT}
+        />
+        <StartTemplates value={start} onChange={setStart} disabled={busy} />
+        {problem && (
+          <p className="mt-2 text-xs text-destructive" role="alert">
             {problem}
           </p>
         )}
-
-        {!projects ? (
-          !problem && (
-            <p className="mt-6 text-[13px] text-muted-foreground" role="status">
-              {t("Loading your projects…")}
-            </p>
-          )
-        ) : projects.length === 0 ? (
-          <p className="mt-6 text-[13px] text-muted-foreground">
-            {t(
-              "You have no projects yet. Start one here, or sync a folder from the desktop app.",
-            )}
-          </p>
-        ) : (
-          <ul className="mt-4 overflow-hidden rounded-[10px] bg-card shadow-[0_0_0_1px_var(--border)]">
-            {projects.map((project) => (
-              <li key={project.id} className="border-b last:border-b-0">
-                <a
-                  href={ADDRESS.of(project.id)}
-                  onClick={(event) => {
-                    if (event.metaKey || event.ctrlKey || event.shiftKey) return;
-                    event.preventDefault();
-                    go(ADDRESS.of(project.id));
-                  }}
-                  className="flex h-9 items-center gap-3 px-3 text-[13px] hover:bg-muted"
-                >
-                  <span className="min-w-0 flex-1 truncate font-medium">
-                    {project.name}
-                  </span>
-                  <span className="flex-none text-xs text-muted-foreground">
-                    {project.owner.id === account.id ? "" : `${project.owner.name} · `}
-                    {day(project.updatedAt)}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+        <StartFooter
+          create={
+            <button type="submit" disabled={busy} className={PRIMARY_BUTTON}>
+              {t("Create")}
+            </button>
+          }
+        />
+      </form>
+    </StartPage>
   );
 }
 
@@ -360,8 +311,8 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
 }
 
 /**
- * Cursive in the browser, on the Scholarkit server: the account's
- * projects at /cursive/projects, one project at /cursive/projects/<id>. Signed out, it
+ * Cursive in the browser, on the Scholarkit server: a new project at
+ * /cursive/projects, one project at /cursive/projects/<id>. Signed out, it
  * goes to the server's sign-in page and comes back.
  */
 export function Web() {
@@ -428,6 +379,6 @@ export function Web() {
   return id ? (
     <OpenProject key={id} id={id} account={account} />
   ) : (
-    <Projects account={account} />
+    <NewProject account={account} />
   );
 }

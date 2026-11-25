@@ -95,6 +95,12 @@ export const TEMPLATES: Template[] = [
     ),
   },
   {
+    id: "tutorial",
+    name: "Tutorial",
+    kind: "tutorial",
+    description: t("One lesson with an explanation and a quiz, to grow into a course."),
+  },
+  {
     id: "course-module",
     name: "Course module",
     kind: "tutorial",
