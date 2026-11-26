@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.6.0 (unreleased)
+## 0.6.0 (2026-11-26)
 
 - The desktop app works live in projects you share with others, as the browser does: you see their faces and carets, and their changes come in as they type, while every page stays saved in your folder. Projects only you work in sync as before.
 - In the browser, the Markdown view shows the carets and selections of the people working with you, with their names, as the page does. A name shows when they type or move, then fades; point at their caret to see it again.
