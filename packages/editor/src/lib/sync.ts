@@ -28,7 +28,9 @@ export interface Presence {
     user: { id: string; name: string } | null;
     state: Record<string, unknown>;
   }>;
-  /** Called when someone comes, goes or moves. Returns a function that stops it. */
+  /** Whether the live connection is up; while it isn't, your changes wait in this window. */
+  connected?(): boolean;
+  /** Called when someone comes, goes or moves, and when the connection drops or comes back. Returns a function that stops it. */
   onChange(listener: () => void): () => void;
 }
 
@@ -72,7 +74,7 @@ export const connectToServer: Connect = (id, doc) =>
           unsynced: () => provider.unsyncedChanges,
           onUnsynced: (listener) => listeners.add(listener),
           onAuthenticated: (listener) => authenticated.add(listener),
-          presence: provider.awareness ? presenceOf(provider.awareness) : undefined,
+          presence: provider.awareness ? presenceOf(provider) : undefined,
           close: () => provider.destroy(),
         });
       },
@@ -86,11 +88,15 @@ export const connectToServer: Connect = (id, doc) =>
     });
   });
 
-type Awareness = NonNullable<HocuspocusProvider["awareness"]>;
-
 /** The presence a connection's awareness carries, under the field "presence". */
-function presenceOf(awareness: Awareness): Presence {
+function presenceOf(provider: HocuspocusProvider): Presence {
+  const awareness = provider.awareness!;
+  let connected = true;
+  provider.on("status", ({ status }: { status: string }) => {
+    connected = status === "connected";
+  });
   return {
+    connected: () => connected,
     set: (state) => awareness.setLocalStateField("presence", state),
     others: () =>
       [...awareness.getStates()].flatMap(([clientId, value]) => {
@@ -113,7 +119,11 @@ function presenceOf(awareness: Awareness): Presence {
       }),
     onChange: (listener) => {
       awareness.on("change", listener);
-      return () => awareness.off("change", listener);
+      provider.on("status", listener);
+      return () => {
+        awareness.off("change", listener);
+        provider.off("status", listener);
+      };
     },
   };
 }

@@ -8,8 +8,8 @@ import {
   QUIET_BUTTON,
 } from "@scholarkit/editor/components/Dialog";
 import { Select } from "@scholarkit/editor/components/Select";
+import { Face } from "@scholarkit/collab";
 import { ConfirmDialog } from "./ConfirmDialog";
-import { Face } from "./Face";
 import type { Account, People, Server, ServerProject, ShareRole } from "@/lib/server";
 import { t } from "@scholarkit/i18n";
 
@@ -72,7 +72,7 @@ function Person({
 }) {
   return (
     <li className="flex items-center gap-2.5">
-      <Face userId={userId} name={name} />
+      <Face person={{ id: userId, name }} size={24} />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13px] font-medium">
           {name}

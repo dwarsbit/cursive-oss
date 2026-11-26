@@ -9,7 +9,6 @@ import {
 } from "@scholarkit/editor/components/Dialog";
 import { PublishDialog } from "@/components/PublishDialog";
 import { ShareDialog } from "@/components/ShareDialog";
-import { HereNow } from "@/components/HereNow";
 import { usePresence } from "@/lib/presence";
 import {
   browserSaveFile,
@@ -189,7 +188,7 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
   const [saved, setSaved] = useState(true);
   const [publishing, setPublishing] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const presence = usePresence(store.withPresence);
+  const presence = usePresence(store.withPresence, account.id);
 
   useEffect(() => {
     clearTimeout(closing.get(store));
@@ -264,7 +263,6 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
         actions={
           info && (
             <>
-              <HereNow peers={presence.peers} me={account.id} />
               <button
                 type="button"
                 className={HEADER_BUTTON}

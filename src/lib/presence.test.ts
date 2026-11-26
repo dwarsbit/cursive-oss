@@ -3,7 +3,7 @@ import type { Presence } from "@scholarkit/editor/lib/sync";
 import { readPeers } from "./presence";
 
 describe("readPeers", () => {
-  it("reads the page and caret of each window, and skips windows without a user", () => {
+  it("reads the page, view and caret of each window, and skips windows without a user", () => {
     const presence: Presence = {
       set: () => {},
       onChange: () => () => {},
@@ -11,7 +11,7 @@ describe("readPeers", () => {
         {
           clientId: 1,
           user: { id: "u1", name: "Sara Okafor" },
-          state: { page: "Thesis/Plan.md", anchor: 4, head: 9 },
+          state: { page: "Thesis/Plan.md", view: "markdown", anchor: 4, head: 9 },
         },
         { clientId: 2, user: { id: "u2", name: "Anna Berg" }, state: { anchor: -1 } },
         { clientId: 3, user: null, state: { page: "Plan.md" } },
@@ -22,6 +22,7 @@ describe("readPeers", () => {
         clientId: 1,
         user: { id: "u1", name: "Sara Okafor" },
         page: "Thesis/Plan.md",
+        view: "markdown",
         anchor: 4,
         head: 9,
       },
@@ -29,6 +30,7 @@ describe("readPeers", () => {
         clientId: 2,
         user: { id: "u2", name: "Anna Berg" },
         page: null,
+        view: "visual",
         anchor: null,
         head: null,
       },

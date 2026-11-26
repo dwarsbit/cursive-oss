@@ -3,6 +3,7 @@
 @import "@scholarkit/editor/editor.css";
 @import "@scholarkit/updates/updates.css";
 @import "@scholarkit/account-menu/account-menu.css";
+@import "@scholarkit/collab/collab.css";
 
 /* ---------- Shell: the sidebar on the backdrop, the page as a card ---------- */
 .app {

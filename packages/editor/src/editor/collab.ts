@@ -222,7 +222,8 @@ function decorate(doc: ProseNode, carets: RemoteCaret[]): DecorationSet {
     }
     found.push(
       Decoration.widget(head, () => caretWidget(caret), {
-        key: `caret-${caret.id}-${caret.color}-${caret.name}`,
+        // Changes when they move, so their name shows again.
+        key: `caret-${caret.id}-${caret.color}-${caret.name}-${head}-${anchor}`,
         side: 1,
         ignoreSelection: true,
       }),

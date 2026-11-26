@@ -91,6 +91,7 @@
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@hocuspocus/provider": "4.7.1",
     "@lezer/highlight": "^1.2.5",
+    "@scholarkit/collab": "workspace:*",
     "@scholarkit/i18n": "workspace:*",
     "@tiptap/core": "^3.33.1",
     "@tiptap/extension-code-block-lowlight": "^3.33.1",

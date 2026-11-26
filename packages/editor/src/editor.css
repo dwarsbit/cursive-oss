@@ -1505,7 +1505,6 @@
   margin-left: -1px;
   margin-right: -1px;
   border-left: 2px solid var(--caret);
-  pointer-events: none;
   word-break: normal;
 }
 .doc .remote-caret-name {
@@ -1523,6 +1522,22 @@
   line-height: 1.4;
   white-space: nowrap;
   user-select: none;
+  pointer-events: none;
+  /* The name shows when they type or move, then fades (as in Polemic); hovering the caret shows it. */
+  animation: remote-caret-name 3s forwards;
+}
+.doc .remote-caret:hover .remote-caret-name {
+  animation: none;
+  opacity: 1;
+}
+@keyframes remote-caret-name {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 .doc .remote-selection {
   background: color-mix(in srgb, var(--caret) 22%, transparent);

@@ -10,6 +10,11 @@ import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { Annotation, EditorState } from "@codemirror/state";
 import { drawSelection, EditorView, keymap } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
+import {
+  remoteCursors,
+  setRemoteCursors,
+  type RemoteCursor,
+} from "@scholarkit/collab/codemirror";
 import { useEffect, useRef } from "react";
 import { offerFindTarget } from "../lib/find";
 import { codeMirrorFindTarget, findField } from "../lib/find-codemirror";
@@ -96,6 +101,8 @@ export function MarkdownEditor({
   source,
   onChange,
   remote,
+  others,
+  onSelection,
 }: {
   /**
    * The file when the editor opens; later edits live in the editor. When
@@ -105,14 +112,20 @@ export function MarkdownEditor({
   onChange: (source: string) => void;
   /** Counts the changes to the file from elsewhere; each one brings `source` in. */
   remote?: number;
+  /** Other people's carets and selections in this file, as offsets into it. */
+  others?: RemoteCursor[];
+  /** Where your caret and selection are, as offsets into the file, as they move. */
+  onSelection?: (selection: { anchor: number; head: number }) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const initial = useRef(source);
   const sourceRef = useRef(source);
   const onChangeRef = useRef(onChange);
+  const onSelectionRef = useRef(onSelection);
   useEffect(() => {
     onChangeRef.current = onChange;
+    onSelectionRef.current = onSelection;
     sourceRef.current = source;
   });
 
@@ -130,6 +143,7 @@ export function MarkdownEditor({
           syntaxHighlighting(highlight),
           theme,
           findField,
+          remoteCursors,
           keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
           EditorView.contentAttributes.of({
             "aria-label": t("Page as Markdown"),
@@ -141,6 +155,10 @@ export function MarkdownEditor({
             );
             if (update.docChanged && !elsewhere)
               onChangeRef.current(update.state.doc.toString());
+            if (update.selectionSet || update.docChanged) {
+              const { anchor, head } = update.state.selection.main;
+              onSelectionRef.current?.({ anchor, head });
+            }
           }),
         ],
       }),
@@ -167,6 +185,13 @@ export function MarkdownEditor({
       });
     }
   }, [remote]);
+
+  // Others' carets, as they last said where they are; between their updates they move with the text.
+  useEffect(() => {
+    const editor = view.current;
+    if (!editor || others === undefined) return;
+    editor.dispatch({ effects: setRemoteCursors.of(others) });
+  }, [others]);
 
   return <div ref={host} className="source" />;
 }

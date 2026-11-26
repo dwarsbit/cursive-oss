@@ -6,6 +6,8 @@ import { AppLoading } from "@scholarkit/editor/components/AppShell";
 import type { Editor as TiptapEditor } from "@tiptap/core";
 import { Editor, type EditorChange } from "@scholarkit/editor/components/Editor";
 import { mergeMarkdown, type RemoteCaret } from "@scholarkit/editor/editor/collab";
+import { Faces, colorFor, liveStatus, onePerPerson } from "@scholarkit/collab";
+import type { RemoteCursor } from "@scholarkit/collab/codemirror";
 import { MarkdownEditor } from "@scholarkit/editor/components/MarkdownEditor";
 import { PageProperties } from "@scholarkit/editor/components/PageProperties";
 import { clampWidth, Sidebar, type DropPlace } from "@/components/Sidebar";
@@ -26,7 +28,6 @@ import {
   type Reference,
 } from "@scholarkit/editor/references/reference";
 import { cn } from "@scholarkit/editor/lib/cn";
-import { colorFor } from "@/lib/people";
 import type { ProjectPresence } from "@/lib/presence";
 import {
   plainText,
@@ -117,6 +118,13 @@ function deleteQuestion(node: TreeNode, place: ProjectStore["place"]): string {
 }
 
 /** What the status bar says when everything is saved. */
+/** "Thesis/Pilot study plan.md" as "Pilot study plan", for the faces' names. */
+const pageName = (path: string) =>
+  path
+    .slice(path.lastIndexOf("/") + 1)
+    .replace(/\.md$/i, "")
+    .trim();
+
 const SAVED: Record<ProjectStore["place"], string> = {
   disk: t("Saved"),
   browser: t("Saved in this browser"),
@@ -299,31 +307,72 @@ export default function App({
     linked.current = { path: active, title: readPage(source).title.trim() };
   }, [active]);
 
-  // Where you are, for the others: the open page, and your caret in the visual editor.
+  // Where you are, for the others: the open page, and your caret in the view you have it in.
   const share = presence?.share;
+  const view = mode === "visual" ? "visual" : "markdown";
   useEffect(() => {
-    share?.({ page: active, anchor: null, head: null });
-  }, [share, active, mode]);
+    share?.({ page: active, view, anchor: null, head: null });
+  }, [share, active, view]);
   const shareSelection = ({ anchor, head }: { anchor: number; head: number }) =>
-    share?.({ page: active, anchor, head });
+    share?.({ page: active, view: "visual", anchor, head });
+  const shareSourceSelection = ({ anchor, head }: { anchor: number; head: number }) =>
+    share?.({ page: active, view: "markdown", anchor, head });
   const peers = presence?.peers;
+  const me = presence?.me ?? null;
+  // The others on this page in the same view as you; your own other windows don't count.
+  const here = useMemo(
+    () =>
+      (peers ?? []).filter(
+        (peer) =>
+          peer.user.id !== me &&
+          peer.page === active &&
+          peer.view === view &&
+          peer.anchor !== null &&
+          peer.head !== null,
+      ),
+    [peers, me, active, view],
+  );
   const others = useMemo<RemoteCaret[]>(
     () =>
-      (peers ?? []).flatMap((peer) =>
-        peer.page === active && peer.anchor !== null && peer.head !== null
-          ? [
-              {
-                id: String(peer.clientId),
-                name: peer.user.name,
-                color: colorFor(peer.user.id),
-                anchor: peer.anchor,
-                head: peer.head,
-              },
-            ]
-          : [],
-      ),
-    [peers, active],
+      here.map((peer) => ({
+        id: String(peer.clientId),
+        name: peer.user.name,
+        color: colorFor(peer.user.id),
+        anchor: peer.anchor!,
+        head: peer.head!,
+      })),
+    [here],
   );
+  const sourceOthers = useMemo<RemoteCursor[]>(
+    () =>
+      here.map((peer) => ({
+        id: peer.clientId,
+        name: peer.user.name,
+        color: colorFor(peer.user.id),
+        anchor: peer.anchor!,
+        head: peer.head!,
+      })),
+    [here],
+  );
+  // Everyone else in the project, once each, and what the status line says about them.
+  const people = useMemo(
+    () =>
+      onePerPerson(
+        (peers ?? []).map((peer) => ({
+          id: peer.user.id,
+          name: peer.user.name,
+          where: peer.page,
+        })),
+        me,
+      ),
+    [peers, me],
+  );
+  const live = presence
+    ? liveStatus({
+        names: people.map((person) => person.name),
+        connection: presence.connection,
+      })
+    : null;
 
   const tree = useMemo(() => (project ? buildTree(project) : []), [project]);
   // The presentations, each with what its slides are called.
@@ -973,6 +1022,12 @@ export default function App({
               {t("Export")}
             </button>
           )}
+          <Faces
+            people={people}
+            here={active}
+            nameOf={pageName}
+            onOpen={(person) => person.where && open(person.where)}
+          />
           {actions}
         </header>
 
@@ -1061,6 +1116,8 @@ export default function App({
               source={source ?? ""}
               onChange={(file) => update(readPage(file))}
               remote={remote}
+              others={sourceOthers}
+              onSelection={presence ? shareSourceSelection : undefined}
             />
           )}
         </div>
@@ -1069,12 +1126,14 @@ export default function App({
           <span className="inline-flex min-w-0 items-center gap-1.5" role="status">
             <span
               aria-hidden
-              className={`size-1.5 flex-none rounded-full ${problem || status?.warn ? "bg-warning" : "bg-success"}`}
+              className={`size-1.5 flex-none rounded-full ${problem || status?.warn || live?.tone === "warn" ? "bg-warning" : "bg-success"}`}
             />
             <span className="truncate">
               {problem
                 ? t("Not saved. {problem}", { problem })
-                : (status?.text ?? SAVED[store.place])}
+                : status?.warn
+                  ? status.text
+                  : (live?.text ?? status?.text ?? SAVED[store.place])}
             </span>
           </span>
           {active && <span className="path truncate font-mono">{active}</span>}
