@@ -2,6 +2,7 @@
 
 ## 0.4.1 (2026-11-26)
 
+- Type `@` and a few words of a title, or an author's name, to cite a paper from OpenAlex's 480 million works. It comes with Plus and Pro and needs your Scholarkit account: Plus finds titles and authors and looks up the rest when you cite, Pro shows each paper's year and journal as you choose.
 - **Publish** puts your site on scholark.it, under your username: `scholark.it/@yourname/site-name`. Your first publish makes your username from your name; change it on your account page. `scholark.it/@yourname` lists all your sites.
 - Cursive's icon at the top left takes you back to your projects, as in Polemic and Binder: in the browser to your Scholarkit home page, in the desktop app to the list of projects. In the browser it replaces the **Scholarkit home** link.
 - In the browser, your avatar is at the top right, as in the desktop app, Polemic and Binder. It opens **Manage account** and **Sign out**.

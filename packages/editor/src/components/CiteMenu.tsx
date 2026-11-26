@@ -1,6 +1,6 @@
 import { computePosition, flip, offset, shift } from "@floating-ui/dom";
 import type { Editor, Range } from "@tiptap/core";
-import { BookMarked, Settings } from "lucide-react";
+import { BookMarked, Settings, Sparkles } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CiteController, CiteState } from "../editor/cite";
 import { insertCrossRef, numberingOf, type Target } from "../editor/numbering";
@@ -13,7 +13,15 @@ import {
   writeBibliography,
   type Reference,
 } from "../references/reference";
-import { lookUp, lookupOf } from "../references/lookup";
+import {
+  foundWork,
+  lookUp,
+  lookupOf,
+  paperDetails,
+  paperSearch,
+  type FoundPaper,
+} from "../references/lookup";
+import { ServerError } from "../lib/account";
 import {
   activeBibFiles,
   activeSources,
@@ -47,7 +55,38 @@ type Option =
   | { kind: "target"; target: Target }
   | { kind: "zotero"; item: ZoteroItem; library: ZoteroLibrary }
   | { kind: "bib"; ref: Reference; source: BibSource }
-  | { kind: "lookup"; ref: Reference };
+  | { kind: "lookup"; ref: Reference }
+  | { kind: "paper"; paper: FoundPaper };
+
+/** Papers are searched for once there are this many characters, and typing pauses. */
+const PAPER_MIN_CHARS = 3;
+const PAPER_PAUSE_MS = 400;
+
+/**
+ * Why papers aren't searched for now, and until when: no plan, a refused
+ * key, no account. The menu shows it instead of asking the server again
+ * at every `@`.
+ */
+let paperPause: { code: string; message: string; until: number } | null = null;
+
+const pausedPapers = () =>
+  paperPause && paperPause.until > Date.now() ? paperPause : null;
+
+/** Notices that wait a while before papers are searched for again. */
+const PAUSE_MS: Record<string, number> = {
+  plus_needed: 10 * 60_000,
+  key_refused: 10 * 60_000,
+  key_budget_used: 10 * 60_000,
+  unauthorized: 60_000,
+  rate_limited: 60_000,
+};
+
+interface Papers {
+  query: string;
+  works: FoundPaper[];
+  betterWithPro: boolean;
+  problem: string | null;
+}
 
 /** Asks the app to open its settings at the references. */
 export const openReferenceSettings = () =>
@@ -199,6 +238,7 @@ export function CiteMenu({
     ref: Reference | null;
     problem: string | null;
   } | null>(null);
+  const [papers, setPapers] = useState<Papers | null>(null);
   const [selected, setSelected] = useState(0);
   const [lastQuery, setLastQuery] = useState(query);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -237,7 +277,31 @@ export function CiteMenu({
     lookedUp?.ref && !refs.has(lookedUp.ref.key)
       ? [{ kind: "lookup", ref: lookedUp.ref }]
       : [];
-  const options = [...onPage, ...targets, ...fromLookup, ...fromZotero, ...fromBib];
+  // Papers from OpenAlex, by title or authors, after the works in the libraries.
+  const searcher = paperSearch();
+  const paperWords = query.trim();
+  const paused = pausedPapers();
+  const pause = paused?.code === "unauthorized" ? null : paused;
+  const wantsPapers =
+    searcher !== null && !lookup && paperWords.length >= PAPER_MIN_CHARS;
+  const foundPapers = papers?.query === paperWords ? papers : null;
+  const pageDois = new Set(
+    [...refs.values()].map((ref) => ref.doi.toLowerCase()).filter(Boolean),
+  );
+  const fromPapers: Option[] = wantsPapers
+    ? (foundPapers?.works ?? [])
+        .filter((paper) => !paper.doi || !pageDois.has(paper.doi.toLowerCase()))
+        .slice(0, 5)
+        .map((paper) => ({ kind: "paper", paper }))
+    : [];
+  const options = [
+    ...onPage,
+    ...targets,
+    ...fromLookup,
+    ...fromZotero,
+    ...fromBib,
+    ...fromPapers,
+  ];
   const searching = hasSources && !current;
   const index = Math.min(selected, Math.max(0, options.length - 1));
 
@@ -325,7 +389,62 @@ export function CiteMenu({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lookupKey]);
 
+  useEffect(() => {
+    if (!wantsPapers || pausedPapers()) return;
+    let live = true;
+    const timer = setTimeout(() => {
+      searcher
+        .search(paperWords)
+        .then((answer) => {
+          if (live)
+            setPapers({
+              query: paperWords,
+              works: answer.works,
+              betterWithPro: Boolean(answer.betterWithPro),
+              problem: null,
+            });
+        })
+        .catch((error: unknown) => {
+          const answered = error instanceof ServerError && error.status > 0;
+          const code = !answered
+            ? ""
+            : error.status === 401
+              ? "unauthorized"
+              : error.code;
+          if (answered && PAUSE_MS[code])
+            paperPause = {
+              code,
+              message: error.message,
+              until: Date.now() + PAUSE_MS[code],
+            };
+          // Signed out or offline, the menu just shows no papers.
+          if (live)
+            setPapers({
+              query: paperWords,
+              works: [],
+              betterWithPro: false,
+              problem: answered && code !== "unauthorized" ? messageOf(error) : null,
+            });
+        });
+    }, PAPER_PAUSE_MS);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+    // Asked again only when the words change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wantsPapers, paperWords]);
+
   const pick = (option: Option) => {
+    if (option.kind === "paper") {
+      // On Plus the search gave the title, authors and DOI: the rest is looked up first.
+      const taken = [...refs.keys()];
+      void paperDetails(option.paper).then((work) => {
+        controller.close();
+        insertCitation(editor, range, foundWork(work, taken), addElsewhere);
+      });
+      return;
+    }
     controller.close();
     if (option.kind === "target") {
       insertCrossRef(editor, range, option.target.id);
@@ -442,6 +561,19 @@ export function CiteMenu({
         .filter(Boolean)
         .join(" · ");
       key = `b:${option.source.id}:${option.ref.key}`;
+    } else if (option.kind === "paper") {
+      title = option.paper.title;
+      detail = [
+        option.paper.author
+          .map((name) => name.split(",")[0])
+          .slice(0, 3)
+          .join(", "),
+        option.paper.year,
+        option.paper.container,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      key = `o:${option.paper.openAlexId || option.paper.doi || option.paper.title}`;
     } else {
       title = option.ref.title;
       detail = refDetail(option.ref);
@@ -555,10 +687,54 @@ export function CiteMenu({
                 : t("Type to search your BibTeX files."))}
           </p>
         )}
+        {wantsPapers && (fromPapers.length > 0 || pause || foundPapers?.problem) && (
+          <div role="group" aria-label={t("Papers from OpenAlex")}>
+            <div className={GROUP_HEAD}>{t("Papers from OpenAlex")}</div>
+            {rows(fromPapers)}
+            {pause?.code === "plus_needed" ? (
+              <button
+                type="button"
+                className="mt-0.5 flex w-full items-start gap-1.5 rounded-md bg-muted px-2 py-1.5 text-left text-xs text-tint-foreground"
+                onClick={() => {
+                  if (!searcher.plans) return;
+                  controller.close();
+                  searcher.plans();
+                }}
+              >
+                <Sparkles className="mt-px size-3.5 flex-none" aria-hidden />
+                <span>
+                  {t("Find papers by their title or authors with Plus and Pro.")}{" "}
+                  {searcher.plans && (
+                    <span className="font-medium underline-offset-2 hover:underline">
+                      {t("See plans")}
+                    </span>
+                  )}
+                </span>
+              </button>
+            ) : pause ? (
+              <p className={NOTE}>{pause.message}</p>
+            ) : (
+              foundPapers?.problem && <p className={NOTE}>{foundPapers.problem}</p>
+            )}
+            {foundPapers?.betterWithPro && fromPapers.length > 0 && searcher.plans && (
+              <button
+                type="button"
+                className="mt-0.5 flex w-full items-center gap-1.5 rounded-md bg-muted px-2 py-1.5 text-left text-xs font-medium text-tint-foreground hover:underline"
+                onClick={() => {
+                  controller.close();
+                  searcher.plans?.();
+                }}
+              >
+                <Sparkles className="size-3.5 flex-none" aria-hidden />
+                {t("Get better results with Pro")}
+              </button>
+            )}
+          </div>
+        )}
         {searching && fromZotero.length === 0 && fromBib.length === 0 && (
           <p className={NOTE}>{t("Searching…")}</p>
         )}
-        {!hasSources && !lookup && (
+        {!hasSources && !lookup && fromPapers.length === 0 && (
           <div className="flex flex-col items-start gap-2 px-2 py-2.5 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <BookMarked className="size-3.5" aria-hidden />

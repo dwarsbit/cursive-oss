@@ -33,7 +33,7 @@ import {
 import { t } from "@scholarkit/i18n";
 import { rich } from "@scholarkit/i18n/react";
 import { saveBeforeSwitch } from "@/lib/languages";
-import { setWorkLookup } from "@scholarkit/editor/references/lookup";
+import { setPaperSearch, setWorkLookup } from "@scholarkit/editor/references/lookup";
 
 const server = new Server(browserTransport);
 
@@ -318,10 +318,18 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
  * goes to the server's sign-in page and comes back.
  */
 export function Web() {
-  // DOIs, ISBNs, arXiv and PubMed IDs are looked up on the server, never at the source.
+  // DOIs, ISBNs, arXiv and PubMed IDs are looked up on the server, never at the source,
+  // and so are papers by their title or authors.
   useEffect(() => {
     setWorkLookup((kind, id) => server.lookUpWork(kind, id));
-    return () => setWorkLookup(null);
+    setPaperSearch(
+      (q) => server.searchPapers(q),
+      () => window.location.assign("/account#plan"),
+    );
+    return () => {
+      setWorkLookup(null);
+      setPaperSearch(null);
+    };
   }, []);
   const path = useSyncExternalStore(subscribeToAddress, () => window.location.pathname);
 

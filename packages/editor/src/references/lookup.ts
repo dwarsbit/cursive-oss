@@ -82,6 +82,22 @@ export function setWorkLookup(lookup: WorkLookup | null) {
   workLookup = lookup;
 }
 
+/** Asks the server for papers by their title or authors (GET /api/lookup/search). */
+export type PaperSearcher = (q: string) => Promise<PaperSearch>;
+
+let paperSearcher: { search: PaperSearcher; plans?: () => void } | null = null;
+
+/**
+ * Where paper searches go, and how the app shows its plans. Without it,
+ * the cite menu finds no papers.
+ */
+export function setPaperSearch(search: PaperSearcher | null, plans?: () => void) {
+  paperSearcher = search ? { search, plans } : null;
+}
+
+/** The app's paper search and plans, when it has them. */
+export const paperSearch = () => paperSearcher;
+
 /**
  * An arXiv ID, bare or after `arXiv:`, or an arxiv.org address. New IDs
  * are `YYMM.NNNNN`, older ones name the archive: `math.GT/0309136`.
