@@ -5,6 +5,7 @@
 - Inviting people to a project comes with Pro. The people you invite can be on any plan, Free included. When you move to Plus or Free, the people in your projects keep their access, but you can't invite anyone new; **Share** shows **See plans** instead.
 - Dropdowns open Cursive's own list instead of your system's, in the same style as the rest of Cursive: a code block's language, the citation style of your references, a person's role in **Share** and the interface language in **Settings**.
 - After `@`, type several words, such as an author, a word from the title and a year: `@stickgold sleep 2005`. The menu searches all of them and closes at a comma or a full stop, at a new line, or when nothing matches, so you can keep writing.
+- Scroll bars are slim and rounded, in Cursive's grays, and in dark mode too.
 
 ## 0.4.1 (2026-11-26)
 
