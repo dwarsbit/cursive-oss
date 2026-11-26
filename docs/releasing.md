@@ -24,6 +24,8 @@ It releases the version of the `## X.Y.Z (unreleased)` heading in
    green for the same files (the Mirror workflow starts it after a
    merge), run **Cursive release** from the Actions tab of Scholarkit,
    on `main`. It takes no input.
+   Releasing several apps takes one CI run: run their releases one after
+   another, as a release commit needs no CI run of its own.
 
 **Cursive release** requires exactly one unreleased heading and a numeric
 version (Windows installers take no pre-releases). It sets the version in
