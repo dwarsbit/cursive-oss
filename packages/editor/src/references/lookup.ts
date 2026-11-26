@@ -62,6 +62,8 @@ export type FoundPaper = LookedUpWork & {
 /** What a paper search answers: the papers, best first. */
 export interface PaperSearch {
   works: FoundPaper[];
+  /** Found on Plus: Pro shows each paper's details too. */
+  betterWithPro?: boolean;
 }
 
 /** A work as a lookup found it: a reference, with the IDs a reference doesn't keep. */
