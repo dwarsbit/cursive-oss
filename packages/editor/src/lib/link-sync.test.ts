@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { syncRun, type FileTransfer, type Folder, type Link } from "./link-sync";
 import {
+  folderSync,
+  syncRun,
+  type FileTransfer,
+  type Folder,
+  type Link,
+} from "./link-sync";
+import {
+  decodeDoc,
   fromBase64,
   newDoc,
   readAssets,
@@ -331,5 +338,84 @@ describe("syncRun with files", () => {
     expect(laptop.content["a.pdf"]).toBe("new");
     // The account keeps the version it has.
     expect(readAssets(doc)).toEqual({ "a.pdf": ref("a") });
+  });
+});
+
+describe("syncRun with a live document", () => {
+  it("leaves the pages to the live document and brings what it missed into it", async () => {
+    const { server, doc, pages } = fakeServer();
+    const laptop = computer({ "a.md": "A\n" });
+    const first = await laptop.sync(server);
+    const live = decodeDoc(first.link.state);
+    // Typed live: in the live document; the folder lags behind.
+    writeDocPage(live, "a.md", "A, typed live\n");
+    // Someone else's change the connection didn't bring yet.
+    writeDocPage(doc, "b.md", "B\n");
+    const folder: Folder = {
+      read: async () => {
+        throw new Error("a live run doesn't read the folder's pages");
+      },
+      write: async () => {
+        throw new Error("a live run doesn't write pages");
+      },
+      remove: async () => {
+        throw new Error("a live run doesn't remove pages");
+      },
+    };
+    const run = await syncRun(
+      server,
+      folder,
+      first.link,
+      true,
+      undefined,
+      new Map(),
+      live,
+    );
+    expect(run.changes).toEqual([]);
+    expect(readPages(live)).toEqual({ "a.md": "A, typed live\n", "b.md": "B\n" });
+    expect(pages()).toEqual({ "a.md": "A, typed live\n", "b.md": "B\n" });
+    expect(readPages(decodeDoc(run.link.state))).toEqual(readPages(live));
+  });
+
+  it("goes on from the live document once the connection is gone, without doubling text", async () => {
+    const { server, pages, doc } = fakeServer();
+    const disk: Record<string, string> = { "a.md": "A\n" };
+    const folder: Folder = {
+      read: async () => ({ ...disk }),
+      write: async (path, source) => void (disk[path] = source),
+      remove: async (path) => void delete disk[path],
+    };
+    let live: Y.Doc | null = null;
+    let saved: Link = { projectId: "p1", state: "" };
+    const sync = folderSync({
+      server,
+      folder,
+      link: saved,
+      writable: true,
+      saveLink: async (link) => void (saved = link),
+      live: () => live,
+      afterRun: (link) => {
+        live ??= decodeDoc(link.state);
+      },
+    });
+    try {
+      await sync.run();
+      expect(live).not.toBeNull();
+      // Typed while live: into the document and the folder, and sent.
+      writeDocPage(live!, "a.md", "A and more\n");
+      disk["a.md"] = "A and more\n";
+      await sync.run();
+      expect(pages()).toEqual({ "a.md": "A and more\n" });
+      // Typed just before the connection went: the connection sent it, the link doesn't have it yet.
+      writeDocPage(live!, "a.md", "A and more, and the last words\n");
+      disk["a.md"] = "A and more, and the last words\n";
+      Y.applyUpdate(doc, Y.encodeStateAsUpdate(live!));
+      live = null;
+      await sync.run();
+      expect(pages()).toEqual({ "a.md": "A and more, and the last words\n" });
+      expect(readPages(decodeDoc(saved.state))).toEqual(pages());
+    } finally {
+      sync.stop();
+    }
   });
 });

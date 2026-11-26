@@ -334,6 +334,14 @@ export class AccountServer {
     return this.call("DELETE", memberPath(id, userId));
   }
 
+  /**
+   * A ticket the desktop app's window opens the project's live connection with, for a minute,
+   * and whether anyone else is in the project.
+   */
+  syncTicket(id: string): Promise<{ ticket: string; shared: boolean }> {
+    return this.call("POST", `/api/projects/${encodeURIComponent(id)}/sync-ticket`);
+  }
+
   /** What the server's document has that a copy with this state vector lacks. */
   async documentSync(
     id: string,

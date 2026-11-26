@@ -135,6 +135,9 @@ now you run it from the source, as described under [Develop](#develop).
   same page are both kept.
 - **In the browser** (Polemic account): open and edit the projects in your
   account at `/cursive` on the Polemic server.
+- **Working together**: in a project you share with others, you see their
+  faces, carets and changes as they type, in the browser and in the
+  desktop app. The desktop app still saves every page in the folder.
 - **Sites** (Polemic account): the **Publish** button makes a site of the
   project's pages, at an address you choose. Publish again to bring the
   site up to date, or unpublish it.

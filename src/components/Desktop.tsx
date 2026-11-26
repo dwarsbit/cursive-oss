@@ -11,6 +11,9 @@ import { ProjectPicker } from "@/components/ProjectPicker";
 import { PublishDialog } from "@/components/PublishDialog";
 import { ShareDialog } from "@/components/ShareDialog";
 import { desktopStore } from "@/lib/desktop-store";
+import { liveFolder, type LiveFolder } from "@/lib/live-folder";
+import { usePresence } from "@/lib/presence";
+import { connectTo, type Presence } from "@scholarkit/editor/lib/sync";
 import {
   folderSync,
   type FolderSync,
@@ -83,9 +86,22 @@ interface Session {
   /** The project in the account, with your role in it; null when unknown. */
   info: ServerProject | null;
   sync: FolderSync | null;
+  /** A shared project's live connection: see live-folder.ts. */
+  live: LiveFolder | null;
+  /** Connects live when the project is shared with others and isn't live yet. */
+  goLive(): Promise<void>;
+  /** Stops syncing and keeps where the project's document is. */
+  close(): void;
 }
 
 let sessions = 0;
+
+/** How often a window that comes back asks again whether the project became shared. */
+const ASK_SHARED_EVERY = 30_000;
+
+/** The sync service's address on the account's server: wss: for https:. */
+const syncAddress = async () =>
+  `${(await invoke<string>("account_server")).replace(/^http/, "ws")}/api/sync`;
 
 async function openSession(dir: string, signedIn: boolean): Promise<Session> {
   const store = desktopStore(dir);
@@ -97,6 +113,9 @@ async function openSession(dir: string, signedIn: boolean): Promise<Session> {
     projectId: null,
     info: null,
     sync: null,
+    live: null,
+    goLive: () => Promise.resolve(),
+    close: () => void store.flush().catch(() => {}),
   };
   const link = await invoke<Link | null>("link_load", { dir }).catch(() => null);
   if (!link) return session;
@@ -107,6 +126,14 @@ async function openSession(dir: string, signedIn: boolean): Promise<Session> {
   session.info = await server.project(link.projectId).catch(() => null);
   const writable = session.info?.writable ?? true;
   const projectId = link.projectId;
+  const live = liveFolder(
+    {
+      writePage: (path, source) => store.writePage(path, source),
+      remove: (path) => store.remove(path),
+    },
+    writable,
+  );
+  let closing = false;
   const sync = folderSync({
     server,
     folder: store.folder,
@@ -126,9 +153,59 @@ async function openSession(dir: string, signedIn: boolean): Promise<Session> {
         invoke<void>("link_download_file", { dir, path, projectId, hash: ref.hash }),
     },
     saveLink: (next) =>
-      invoke<void>("link_save", { dir, projectId: next.projectId, state: next.state }),
+      // Once the window closes, the live document is kept instead: it is newer.
+      closing && live.doc()
+        ? Promise.resolve()
+        : invoke<void>("link_save", {
+            dir,
+            projectId: next.projectId,
+            state: next.state,
+          }),
+    live: () => live.forRun(),
+    afterRun: (next) => live.adopt(next.state),
   });
   session.sync = sync;
+  session.live = live;
+  live.onFiles(() => sync.touch());
+
+  let trying: Promise<void> | null = null;
+  session.goLive = () => {
+    if (trying) return trying;
+    if (live.connected() || closing) return Promise.resolve();
+    trying = (async () => {
+      await first;
+      const ticket = await server.syncTicket(projectId);
+      if (!ticket.shared) return;
+      if (!live.doc()) {
+        live.begin();
+        await sync.run();
+      }
+      // The first ticket opens the connection; each reconnect asks for a new one.
+      let fresh: string | null = ticket.ticket;
+      await live.connect(
+        projectId,
+        connectTo(await syncAddress(), async () => {
+          const ticket = fresh ?? (await server.syncTicket(projectId)).ticket;
+          fresh = null;
+          return ticket;
+        }),
+      );
+    })()
+      .catch(() => {})
+      .finally(() => {
+        trying = null;
+      });
+    return trying;
+  };
+  session.close = () => {
+    closing = true;
+    sync.stop();
+    const state = live.state();
+    live.close();
+    void store.flush().catch(() => {});
+    if (state) void invoke("link_save", { dir, projectId, state }).catch(() => {});
+  };
+
   const first = sync.run();
   const touched = <T,>(work: Promise<T>) => {
     sync.touch();
@@ -141,12 +218,28 @@ async function openSession(dir: string, signedIn: boolean): Promise<Session> {
       await Promise.race([first, new Promise((done) => setTimeout(done, 5_000))]);
       return store.load();
     },
-    subscribe: sync.onChanges,
+    subscribe: (listener) => {
+      const runs = sync.onChanges(listener);
+      const others = live.onChanges(listener);
+      return () => {
+        runs();
+        others();
+      };
+    },
     onFiles: sync.onFiles,
-    writePage: (path, source) => touched(store.writePage(path, source)),
+    writePage: (path, source) => {
+      live.edit({ kind: "write", path, source });
+      return touched(store.writePage(path, source));
+    },
     writeFile: (path, data) => touched(store.writeFile!(path, data)),
-    rename: (from, to) => touched(store.rename(from, to)),
-    remove: (path) => touched(store.remove(path)),
+    rename: (from, to) => {
+      live.edit({ kind: "rename", from, to });
+      return touched(store.rename(from, to));
+    },
+    remove: (path) => {
+      live.edit({ kind: "remove", path });
+      return touched(store.remove(path));
+    },
   };
   return session;
 }
@@ -178,6 +271,13 @@ export function Desktop() {
   // Counts the changes to the folder's link: each one opens the folder anew.
   const [linked, setLinked] = useState(0);
   const [syncState, setSyncState] = useState<SyncState | null>(null);
+  // Whether the open project is connected live, with others to see.
+  const [live, setLive] = useState(false);
+  const withPresence = useCallback(
+    (listener: (presence: Presence) => void) => session?.live?.withPresence(listener),
+    [session],
+  );
+  const presence = usePresence(withPresence, account?.id ?? null);
   const [dialog, setDialog] = useState<
     { ask: AccountAsk; note?: string } | "publish" | "share" | null
   >(null);
@@ -248,31 +348,42 @@ export function Desktop() {
     let opened: Session | null = null;
     void openSession(folder, signedIn).then((next) => {
       if (!current) {
-        next.sync?.stop();
+        next.close();
         return;
       }
       opened = next;
       setSession(next);
+      setLive(false);
       setSyncState(next.sync?.state() ?? null);
       next.sync?.onState((state) => {
         if (!current) return;
         setSyncState(state);
         if (state.kind === "signed-out") setSignedIn(false);
       });
+      // A project shared with others connects live once the first run is done.
+      next.live?.withPresence(() => current && setLive(true));
+      next.live?.onLost(() => current && setLive(false));
+      void next.goLive();
     });
     return () => {
       current = false;
-      opened?.sync?.stop();
-      void opened?.store.flush().catch(() => {});
+      opened?.close();
     };
   }, [folder, signedIn, linked]);
 
   // Pages still waiting to be written are written before the window
-  // closes, and a window that comes back syncs.
+  // closes, and a window that comes back syncs, and connects live when
+  // the project became shared or the connection was lost.
   useEffect(() => {
     if (!session) return;
+    let asked = Date.now();
     const onHide = () => void session.store.flush().catch(() => {});
-    const onFocus = () => void session.sync?.run();
+    const onFocus = () => {
+      void session.sync?.run();
+      if (Date.now() - asked < ASK_SHARED_EVERY) return;
+      asked = Date.now();
+      void session.goLive();
+    };
     window.addEventListener("pagehide", onHide);
     window.addEventListener("blur", onHide);
     window.addEventListener("focus", onFocus);
@@ -309,7 +420,7 @@ export function Desktop() {
   }, []);
 
   const closeProject = () => {
-    void session?.store.flush().catch(() => {});
+    session?.close();
     forgetFolder();
     setFolder(null);
   };
@@ -488,6 +599,7 @@ export function Desktop() {
         onSwitchProject={closeProject}
         onRenameProject={renameProject}
         status={status}
+        presence={live ? presence : undefined}
         actions={
           <>
             <button type="button" className={HEADER_BUTTON} onClick={share}>
@@ -535,7 +647,10 @@ export function Desktop() {
               openUrl(`${url}/account#plan`),
             )
           }
-          onClose={() => setDialog(null)}
+          onClose={() => {
+            setDialog(null);
+            void session.goLive();
+          }}
         />
       )}
       {dialog === "publish" && session.projectId && (

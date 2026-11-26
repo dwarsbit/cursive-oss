@@ -88,7 +88,14 @@ export interface RunResult {
 /** An update that holds nothing is two bytes long. */
 const isEmpty = (update: Uint8Array) => update.length <= 2;
 
-/** One run. `writable` is false for a project you can read but not change. */
+/**
+ * One run. `writable` is false for a project you can read but not change.
+ *
+ * With `live`, the project's document as a live connection keeps it, pages
+ * already go both ways as they are typed: the run then moves files only,
+ * and brings in over HTTP what the connection may have missed. The pages
+ * it brings change `live`, whose owner writes them into the folder.
+ */
 export async function syncRun(
   server: SyncServer,
   folder: Folder,
@@ -97,12 +104,13 @@ export async function syncRun(
   transfer?: FileTransfer,
   /** Files by their hash that an earlier run couldn't send: not tried again. */
   hold: ReadonlyMap<string, Held["reason"]> = new Map(),
+  live: Y.Doc | null = null,
 ): Promise<RunResult> {
-  const doc = link.state ? decodeDoc(link.state) : new Y.Doc();
+  const doc = live ?? (link.state ? decodeDoc(link.state) : new Y.Doc());
   // Ask first: when the server can't be reached, nothing has happened yet.
   const theirs = await server.documentSync(link.projectId, Y.encodeStateVector(doc));
 
-  const before = await folder.read();
+  const before = live ? readPages(doc) : await folder.read();
   const local = transfer && folder.files ? await folder.files() : null;
   // Files the account doesn't take stay in the folder only.
   const held = new Map<string, Held["reason"]>();
@@ -113,7 +121,7 @@ export async function syncRun(
   }
   // A project you can only read takes nothing from the folder.
   if (writable) {
-    applyPages(doc, before);
+    if (!live) applyPages(doc, before);
     if (transfer && local) {
       // The bytes go first, so every file the document names can be fetched.
       const known = readAssets(doc);
@@ -150,7 +158,7 @@ export async function syncRun(
   }
 
   const after = readPages(doc);
-  const changes = diffPages(before, after);
+  const changes = live ? [] : diffPages(before, after);
   for (const change of changes) {
     if (change.text === null) await folder.remove(change.path);
     else await folder.write(change.path, change.text);
@@ -230,8 +238,14 @@ export function folderSync(options: {
   transfer?: FileTransfer;
   /** Keeps the link for the next time the folder is opened. */
   saveLink: (link: Link) => Promise<void>;
+  /** The project's document while a live connection keeps it in step (see syncRun), else null. */
+  live?: () => Y.Doc | null;
+  /** Called right after each run that worked, before the next one can start. */
+  afterRun?: (link: Link) => void;
 }): FolderSync {
   let link = options.link;
+  // The live document of the last run, until a run finds the connection gone.
+  let lastLive: Y.Doc | null = null;
   let state: SyncState = { kind: "syncing" };
   let running: Promise<void> | null = null;
   let again = false;
@@ -252,6 +266,11 @@ export function folderSync(options: {
   const once = async () => {
     setState({ kind: "syncing" });
     if (hold.size > 0 && Date.now() - heldSince > RETRY_HELD) hold = new Map();
+    const live = options.live?.() ?? null;
+    // Without the connection, runs go on from its document: it has what was typed live.
+    if (!live && lastLive)
+      link = { projectId: link.projectId, state: encodeDoc(lastLive) };
+    lastLive = live;
     try {
       const result = await syncRun(
         options.server,
@@ -260,8 +279,10 @@ export function folderSync(options: {
         options.writable,
         options.transfer,
         hold,
+        live,
       );
       link = result.link;
+      options.afterRun?.(link);
       const next = new Map(result.held.map((file) => [file.hash, file.reason]));
       if (next.size > 0 && hold.size === 0) heldSince = Date.now();
       hold = next;

@@ -2,6 +2,7 @@
 
 ## 0.6.0 (unreleased)
 
+- The desktop app works live in projects you share with others, as the browser does: you see their faces and carets, and their changes come in as they type, while every page stays saved in your folder. Projects only you work in sync as before.
 - In the browser, the Markdown view shows the carets and selections of the people working with you, with their names, as the page does. A name shows when they type or move, then fades; point at their caret to see it again.
 - In the browser, clicking a face in the header opens the page that person is on, and the status line says who is working with you, such as "Live with Anna and Tom". When the connection drops, it says your changes are kept.
 - The faces and carets of the people in a project have the same colors as in Polemic.

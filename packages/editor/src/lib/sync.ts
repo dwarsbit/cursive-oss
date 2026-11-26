@@ -4,7 +4,8 @@ import { t } from "@scholarkit/i18n";
 
 /**
  * Keeping a project's document in step with the Scholarkit server while
- * it is open in the browser, as Cursive and Binder do.
+ * it is open: in the browser, as Cursive and Binder do, and in Cursive's
+ * desktop app for shared projects.
  */
 
 /** The SHA-256 of some bytes, in lowercase hex. */
@@ -41,6 +42,8 @@ export interface Connection {
   onUnsynced(listener: () => void): void;
   /** Called when the server lets the connection in again, maybe with other access. */
   onAuthenticated?(listener: () => void): void;
+  /** Called when the server no longer lets the open connection in, as after you left the project. */
+  onLost?(listener: () => void): void;
   /** Who else has the project open; none when the connection can't tell. */
   presence?: Presence;
   close(): void;
@@ -48,45 +51,67 @@ export interface Connection {
 
 export type Connect = (id: string, doc: Y.Doc) => Promise<Connection>;
 
-/** The server's sync address: the page's own host, signed in by the session cookie. */
-export const connectToServer: Connect = (id, doc) =>
-  new Promise((resolve, reject) => {
-    const scheme = window.location.protocol === "https:" ? "wss" : "ws";
-    const listeners = new Set<() => void>();
-    const authenticated = new Set<() => void>();
-    const timer = setTimeout(() => {
-      provider.destroy();
-      reject(
-        new Error(
-          t("Could not load the project. Check your connection and try again."),
-        ),
-      );
-    }, 30_000);
-    const provider = new HocuspocusProvider({
-      url: `${scheme}://${window.location.host}/api/sync`,
-      name: id,
-      // The session cookie signs the connection in.
-      token: "",
-      document: doc,
-      onSynced: () => {
-        clearTimeout(timer);
-        resolve({
-          unsynced: () => provider.unsyncedChanges,
-          onUnsynced: (listener) => listeners.add(listener),
-          onAuthenticated: (listener) => authenticated.add(listener),
-          presence: provider.awareness ? presenceOf(provider) : undefined,
-          close: () => provider.destroy(),
-        });
-      },
-      onUnsyncedChanges: () => listeners.forEach((listener) => listener()),
-      onAuthenticated: () => authenticated.forEach((listener) => listener()),
-      onAuthenticationFailed: () => {
-        clearTimeout(timer);
+/**
+ * A live connection to the sync service at `url` (ws: or wss:), signed in with what `token`
+ * gives, asked anew on every connect and reconnect.
+ */
+export const connectTo =
+  (url: string, token: () => Promise<string>): Connect =>
+  (id, doc) =>
+    new Promise((resolve, reject) => {
+      const listeners = new Set<() => void>();
+      const authenticated = new Set<() => void>();
+      const lost = new Set<() => void>();
+      let open = false;
+      const timer = setTimeout(() => {
         provider.destroy();
-        reject(new Error(t("This project doesn't exist or isn't shared with you.")));
-      },
+        reject(
+          new Error(
+            t("Could not load the project. Check your connection and try again."),
+          ),
+        );
+      }, 30_000);
+      const provider = new HocuspocusProvider({
+        url,
+        name: id,
+        token: () => token().catch(() => ""),
+        document: doc,
+        onSynced: () => {
+          clearTimeout(timer);
+          if (open) return;
+          open = true;
+          resolve({
+            unsynced: () => provider.unsyncedChanges,
+            onUnsynced: (listener) => listeners.add(listener),
+            onAuthenticated: (listener) => authenticated.add(listener),
+            onLost: (listener) => lost.add(listener),
+            presence: provider.awareness ? presenceOf(provider) : undefined,
+            close: () => provider.destroy(),
+          });
+        },
+        onUnsyncedChanges: () => listeners.forEach((listener) => listener()),
+        onAuthenticated: () => authenticated.forEach((listener) => listener()),
+        onAuthenticationFailed: () => {
+          clearTimeout(timer);
+          provider.destroy();
+          if (open) lost.forEach((listener) => listener());
+          else
+            reject(
+              new Error(t("This project doesn't exist or isn't shared with you.")),
+            );
+        },
+      });
     });
-  });
+
+/** The server's sync address: the page's own host, signed in by the session cookie. */
+export const connectToServer: Connect = (id, doc) => {
+  const scheme = window.location.protocol === "https:" ? "wss" : "ws";
+  // The session cookie signs the connection in.
+  return connectTo(`${scheme}://${window.location.host}/api/sync`, async () => "")(
+    id,
+    doc,
+  );
+};
 
 /** The presence a connection's awareness carries, under the field "presence". */
 function presenceOf(provider: HocuspocusProvider): Presence {
