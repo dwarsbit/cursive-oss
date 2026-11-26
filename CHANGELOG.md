@@ -1,8 +1,9 @@
 # Changelog
 
-## 0.4.2 (unreleased)
+## 0.5.0 (unreleased)
 
 - Dropdowns open Cursive's own list instead of your system's, in the same style as the rest of Cursive: a code block's language, the citation style of your references, a person's role in **Share** and the interface language in **Settings**.
+- After `@`, type several words, such as an author, a word from the title and a year: `@stickgold sleep 2005`. The menu searches all of them and closes at a comma or a full stop, at a new line, or when nothing matches, so you can keep writing.
 
 ## 0.4.1 (2026-11-26)
 

@@ -2,7 +2,13 @@ import { computePosition, flip, offset, shift } from "@floating-ui/dom";
 import type { Editor, Range } from "@tiptap/core";
 import { BookMarked, Settings, Sparkles } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { CiteController, CiteState } from "../editor/cite";
+import { exitSuggestion } from "@tiptap/suggestion";
+import {
+  citeKey,
+  matchesWords,
+  type CiteController,
+  type CiteState,
+} from "../editor/cite";
 import { insertCrossRef, numberingOf, type Target } from "../editor/numbering";
 import { entryPlain } from "../references/styles";
 import { mayHold, usePageReferences } from "../references/context";
@@ -93,24 +99,22 @@ export const openReferenceSettings = () =>
   window.dispatchEvent(new CustomEvent("cursive:settings", { detail: "references" }));
 
 function matches(ref: Reference, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  return [ref.key, ref.title, ref.year, ...ref.author]
-    .join(" ")
-    .toLowerCase()
-    .split(/[\s,]+/)
-    .some((word) => word.startsWith(q));
+  return matchesWords(
+    [ref.key, ref.title, ref.year, ...ref.author].join(" ").split(/[\s,]+/),
+    query,
+  );
 }
 
 function targetMatches(target: Target, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
   if (target.id.startsWith(q)) return true;
-  return [target.label, target.kind === "eq" ? "" : target.caption]
-    .join(" ")
-    .toLowerCase()
-    .split(/[\s,.]+/)
-    .some((word) => word.startsWith(q));
+  return matchesWords(
+    [target.label, target.kind === "eq" ? "" : target.caption]
+      .join(" ")
+      .split(/[\s,.]+/),
+    query,
+  );
 }
 
 /**
@@ -304,6 +308,18 @@ export function CiteMenu({
   ];
   const searching = hasSources && !current;
   const index = Math.min(selected, Math.max(0, options.length - 1));
+  // Past the first word, a search that finds nothing anywhere closes the menu:
+  // the words are part of the sentence.
+  const nothingFound =
+    /\s/.test(query.trim()) &&
+    !options.length &&
+    (!hasSources || current !== null) &&
+    (!lookup || lookedUp !== null) &&
+    (!wantsPapers || foundPapers !== null || paused !== null);
+
+  useEffect(() => {
+    if (nothingFound) exitSuggestion(editor.view, citeKey);
+  }, [nothingFound, editor]);
 
   // Zotero and the BibTeX files are asked a moment after the typing rests.
   useEffect(() => {

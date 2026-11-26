@@ -203,11 +203,22 @@ export class AccountServer {
    * key_budget_used.
    */
   async searchPapers(q: string): Promise<PaperSearch> {
+    return this.paperCall<PaperSearch>(
+      `/api/lookup/search?${new URLSearchParams({ q }).toString()}`,
+    );
+  }
+
+  /**
+   * How papers may be searched for, before any search: titles and authors (Plus) or every
+   * detail. Throws the notice a search would give: `plus_needed`, `search_off`, signed out.
+   */
+  paperSearchAccess(): Promise<{ access: "titles" | "details" }> {
+    return this.paperCall("/api/lookup/search/access");
+  }
+
+  private async paperCall<T>(path: string): Promise<T> {
     try {
-      return await this.call<PaperSearch>(
-        "GET",
-        `/api/lookup/search?${new URLSearchParams({ q }).toString()}`,
-      );
+      return await this.call<T>("GET", path);
     } catch (error) {
       if (error instanceof ServerError && error.status === 401)
         throw new ServerError(
