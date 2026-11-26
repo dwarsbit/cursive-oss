@@ -294,6 +294,7 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
           project={info}
           me={account}
           onLeft={() => go(ADDRESS.list)}
+          openPlans={() => openUrl("/account#plan")}
           onClose={() => setSharing(false)}
         />
       )}

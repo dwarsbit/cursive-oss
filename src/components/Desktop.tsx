@@ -530,6 +530,11 @@ export function Desktop() {
           project={session.info}
           me={account}
           onLeft={() => void left()}
+          openPlans={() =>
+            void invoke<string>("account_server").then((url) =>
+              openUrl(`${url}/account#plan`),
+            )
+          }
           onClose={() => setDialog(null)}
         />
       )}

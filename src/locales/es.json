@@ -291,6 +291,8 @@
   "People you invite work on the project with you, in the browser or in the desktop app. What they add counts toward your storage.": "Las personas que invitas trabajan contigo en el proyecto, en el navegador o en la aplicación de escritorio. Lo que añaden cuenta en tu almacenamiento.",
   "{owner} owns this project and decides who works on it. You can edit it.": "{owner} es el propietario de este proyecto y decide quién trabaja en él. Puedes editarlo.",
   "{owner} owns this project and decides who works on it. You can read it.": "{owner} es el propietario de este proyecto y decide quién trabaja en él. Puedes leerlo.",
+  "The people in this project keep their access. To invite someone new, move to Pro.": "Las personas de este proyecto conservan su acceso. Para invitar a alguien nuevo, cámbiate a Pro.",
+  "Sharing comes with Pro. The people you invite can be on any plan.": "Compartir viene con Pro. Las personas que invites pueden tener cualquier plan.",
   "Email address": "Dirección de correo",
   "Role of the person you invite": "Rol de la persona que invitas",
   "Sending…": "Enviando…",

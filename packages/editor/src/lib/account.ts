@@ -69,6 +69,8 @@ export interface Invite {
 export interface People {
   members: Member[];
   invites: Invite[];
+  /** For the owner: whether their plan lets them invite people (Pro). Missing: yes. */
+  canInvite?: boolean;
 }
 
 /** An answer the server gave that isn't success, with its message for the reader. */

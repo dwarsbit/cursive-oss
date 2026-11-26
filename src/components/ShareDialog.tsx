@@ -1,4 +1,4 @@
-import { Mail, X } from "lucide-react";
+import { Mail, Sparkles, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   BUTTON,
@@ -99,11 +99,14 @@ export function ShareDialog({
   project,
   me,
   onLeft,
+  openPlans,
   onClose,
 }: {
   server: Server;
   project: ServerProject;
   me: Account;
+  /** Opens the plans on the account page; the owner on Free needs Plus or Pro to invite. */
+  openPlans?: () => void;
   /** After you left the project: it is no longer in your account. */
   onLeft: () => void;
   onClose: () => void;
@@ -167,6 +170,8 @@ export function ShareDialog({
     }
   };
 
+  // On Free the owner can't invite anyone new; the people already in the project stay.
+  const locked = owner && people?.canInvite === false;
   const mine = people?.members.find((member) => member.userId === me.id);
   const others = people?.members.filter((member) => member.userId !== me.id) ?? [];
 
@@ -207,6 +212,31 @@ export function ShareDialog({
               )}
       </p>
 
+      {locked && (
+        <button
+          type="button"
+          className="mt-3 flex w-full items-start gap-1.5 rounded-md bg-muted px-2 py-1.5 text-left text-xs text-tint-foreground"
+          onClick={openPlans}
+          disabled={!openPlans}
+        >
+          <Sparkles className="mt-px size-3.5 flex-none" aria-hidden />
+          <span>
+            {people.members.length > 0
+              ? t(
+                  "The people in this project keep their access. To invite someone new, move to Pro.",
+                )
+              : t(
+                  "Sharing comes with Pro. The people you invite can be on any plan.",
+                )}{" "}
+            {openPlans && (
+              <span className="font-medium underline-offset-2 hover:underline">
+                {t("See plans")}
+              </span>
+            )}
+          </span>
+        </button>
+      )}
+
       {owner && (
         <form
           className="mt-3 flex gap-1.5"
@@ -224,18 +254,20 @@ export function ShareDialog({
             autoComplete="off"
             spellCheck={false}
             maxLength={254}
-            className="h-8 min-w-0 flex-1 rounded-md border bg-background px-2 text-[13px] outline-none focus:border-ring"
+            disabled={locked}
+            className="h-8 min-w-0 flex-1 rounded-md border bg-background px-2 text-[13px] outline-none focus:border-ring disabled:opacity-50"
           />
           <RoleSelect
             value={role}
             label={t("Role of the person you invite")}
             className="h-8"
+            disabled={locked}
             onChange={setRole}
           />
           <button
             type="submit"
             className={PRIMARY_BUTTON}
-            disabled={busy !== null || email.trim() === ""}
+            disabled={locked || busy !== null || email.trim() === ""}
           >
             {busy === "invite" ? t("Sending…") : t("Invite")}
           </button>
@@ -353,6 +385,7 @@ export function ShareDialog({
       )}
       {owner &&
         people &&
+        !locked &&
         people.members.length === 0 &&
         people.invites.length === 0 && (
           <p className="mt-2 text-xs text-muted-foreground">

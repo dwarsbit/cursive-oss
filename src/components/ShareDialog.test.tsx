@@ -171,4 +171,43 @@ describe("ShareDialog", () => {
     expect(server.removeMember).toHaveBeenCalledWith("p1", sara.id);
     expect(onLeft).toHaveBeenCalled();
   });
+
+  it("shows the plans instead of inviting on Free, and keeps the people already in", async () => {
+    const server = fakeServer({
+      members: [
+        {
+          userId: sara.id,
+          name: sara.name,
+          email: sara.email,
+          role: "editor",
+          addedAt: "2026-11-20T10:00:00.000Z",
+        },
+      ],
+      invites: [],
+      canInvite: false,
+    });
+    const openPlans = vi.fn();
+    await show(
+      <ShareDialog
+        server={server as unknown as Server}
+        project={project("owner")}
+        me={owner}
+        onLeft={() => {}}
+        openPlans={openPlans}
+        onClose={() => {}}
+      />,
+    );
+    expect(text()).toContain("The people in this project keep their access.");
+    expect(text()).toContain("sara@example.edu");
+    expect(host!.querySelector<HTMLInputElement>('input[type="email"]')!.disabled).toBe(
+      true,
+    );
+    expect(button("Invite").disabled).toBe(true);
+    await act(async () =>
+      [...host!.querySelectorAll("button")]
+        .find((b) => b.textContent?.includes("See plans"))!
+        .click(),
+    );
+    expect(openPlans).toHaveBeenCalledOnce();
+  });
 });
