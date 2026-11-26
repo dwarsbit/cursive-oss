@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0 (unreleased)
+## 0.5.0 (2026-11-26)
 
 - Inviting people to a project comes with Pro. The people you invite can be on any plan, Free included. When you move to Plus or Free, the people in your projects keep their access, but you can't invite anyone new; **Share** shows **See plans** instead.
 - Dropdowns open Cursive's own list instead of your system's, in the same style as the rest of Cursive: a code block's language, the citation style of your references, a person's role in **Share** and the interface language in **Settings**.
