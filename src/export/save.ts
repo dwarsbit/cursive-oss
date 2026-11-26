@@ -14,6 +14,7 @@ export const TYPES: Record<string, string> = {
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   html: "text/html",
   zip: "application/zip",
+  imscc: "application/zip",
   pdf: "application/pdf",
 };
 

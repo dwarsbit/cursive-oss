@@ -142,7 +142,8 @@ now you run it from the source, as described under [Develop](#develop).
   Blueprint, Midnight or Poster. A theme sets the colors, typefaces and
   shapes of every page, slide and quiz.
 - **Export**: the **Export** button, or Cmd/Ctrl + P, exports a page, a
-  presentation or the whole project as PDF, PowerPoint, Word or HTML.
+  presentation or the whole project as PDF, PowerPoint, Word, HTML or a
+  course for a learning platform.
   - **PDF**: **Save…** (in the browser, **Download**) saves the PDF with
     no print window, on A4 or Letter. A presentation is one slide per
     page, or the slides with their speaker notes under them. In the
@@ -153,6 +154,11 @@ now you run it from the source, as described under [Develop](#develop).
   - **Word**: headings, lists, tables, images, footnotes and the reference
     list in Word's own styles, to edit as a handout.
   - **HTML**: one file that opens in any browser, with the images inside it.
+  - **Course**: a Common Cartridge 1.1 file that Canvas, Moodle and
+    Brightspace import. Each page becomes a page, and its quizzes, blanks
+    with one gap and exercises become a quiz after it that the platform
+    grades. Folders become sections or modules. Put in order, blanks with
+    several gaps and assignments stay on their page, as they print.
 
 Sync carries the pages and the images and files they show. An empty folder
 stays on the computer it was made on.

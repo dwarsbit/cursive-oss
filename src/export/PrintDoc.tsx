@@ -28,22 +28,31 @@ import {
   type TutorialKind,
 } from "@scholarkit/editor/tutorial/blocks";
 
+const sourceOf = (props: ReactNodeViewProps) => props.node.attrs.source as string;
+
 /**
  * The tutorial blocks on paper: what a reader of the published page
  * sees before answering. Answers, hints and explanations stay out, so
  * the PDF works as a handout.
  */
 function Block({
+  of,
   kind,
   note,
   children,
 }: {
+  /** The block's node, named for the course export, which reads its YAML from here. */
+  of: ReactNodeViewProps;
   kind: string;
   note?: string;
   children: React.ReactNode;
 }) {
   return (
-    <NodeViewWrapper className="print-block">
+    <NodeViewWrapper
+      className="print-block"
+      data-tutorial={of.node.type.name}
+      data-tutorial-source={sourceOf(of)}
+    >
       <p className="print-block-kind">
         {kind}
         {note && <span>{note}</span>}
@@ -52,8 +61,6 @@ function Block({
     </NodeViewWrapper>
   );
 }
-
-const sourceOf = (props: ReactNodeViewProps) => props.node.attrs.source as string;
 
 /**
  * Items in another order than they were written in, the same one each
@@ -75,7 +82,7 @@ function QuizPrint(props: ReactNodeViewProps) {
   if (!quiz) return <NodeViewWrapper />;
   const many = quiz.answer.length > 1;
   return (
-    <Block kind="Quiz" note={points(quiz.points)}>
+    <Block of={props} kind="Quiz" note={points(quiz.points)}>
       <p className="print-block-title">{quiz.question}</p>
       <ul className="print-options">
         {quiz.options.map((option, index) => (
@@ -102,6 +109,7 @@ function AssignmentPrint(props: ReactNodeViewProps) {
     : "";
   return (
     <Block
+      of={props}
       kind="Assignment"
       note={[points(assignment.points), due && `Due ${due}`]
         .filter(Boolean)
@@ -128,7 +136,7 @@ function AssignmentPrint(props: ReactNodeViewProps) {
 function GoalsPrint(props: ReactNodeViewProps) {
   const goals = readGoals(sourceOf(props));
   return (
-    <Block kind="Learning goals">
+    <Block of={props} kind="Learning goals">
       <ul>
         {goals?.items.filter(Boolean).map((item, index) => (
           <li key={index}>{item}</li>
@@ -141,7 +149,7 @@ function GoalsPrint(props: ReactNodeViewProps) {
 function TermsPrint(props: ReactNodeViewProps) {
   const terms = readTerms(sourceOf(props));
   return (
-    <Block kind="Key terms">
+    <Block of={props} kind="Key terms">
       <dl className="print-terms">
         {terms?.terms.map((term, index) => (
           <div key={index}>
@@ -158,7 +166,7 @@ function VideoPrint(props: ReactNodeViewProps) {
   const video = readVideo(sourceOf(props));
   if (!video?.url) return <NodeViewWrapper />;
   return (
-    <Block kind="Video">
+    <Block of={props} kind="Video">
       {video.title && <p className="print-block-title">{video.title}</p>}
       <p>
         <a href={video.url}>{video.url}</a>
@@ -170,7 +178,7 @@ function VideoPrint(props: ReactNodeViewProps) {
 function ComparePrint(props: ReactNodeViewProps) {
   const compare = readCompare(sourceOf(props));
   return (
-    <Block kind="Before and after">
+    <Block of={props} kind="Before and after">
       <div className="print-pair">
         <div>
           <p className="print-block-hint">Before</p>
@@ -189,7 +197,7 @@ function BlanksPrint(props: ReactNodeViewProps) {
   const blanks = readBlanks(sourceOf(props));
   const { parts } = splitBlanks(blanks?.text ?? "");
   return (
-    <Block kind="Fill in the blanks">
+    <Block of={props} kind="Fill in the blanks">
       <p className="print-blanks">
         {parts.map((text, index) => (
           <span key={index}>
@@ -205,7 +213,7 @@ function BlanksPrint(props: ReactNodeViewProps) {
 function OrderPrint(props: ReactNodeViewProps) {
   const order = readOrder(sourceOf(props));
   return (
-    <Block kind="Put in order">
+    <Block of={props} kind="Put in order">
       {order?.prompt && <p className="print-block-title">{order.prompt}</p>}
       <ul className="print-options">
         {mixed(order?.items.filter(Boolean) ?? []).map((item, index) => (
@@ -222,7 +230,7 @@ function OrderPrint(props: ReactNodeViewProps) {
 function ExercisePrint(props: ReactNodeViewProps) {
   const exercise = readExercise(sourceOf(props));
   return (
-    <Block kind="Exercise">
+    <Block of={props} kind="Exercise">
       <PrintDoc markdown={exercise?.prompt ?? ""} />
     </Block>
   );
@@ -231,7 +239,7 @@ function ExercisePrint(props: ReactNodeViewProps) {
 function FlashcardsPrint(props: ReactNodeViewProps) {
   const cards = readFlashcards(sourceOf(props));
   return (
-    <Block kind="Flashcards">
+    <Block of={props} kind="Flashcards">
       <dl className="print-terms">
         {cards?.cards.map((card, index) => (
           <div key={index}>

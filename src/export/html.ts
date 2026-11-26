@@ -86,6 +86,10 @@ async function pages(root: HTMLElement): Promise<string> {
     element.removeAttribute("translate");
   });
   copy.querySelectorAll("button, style").forEach((element) => element.remove());
+  // A tutorial block's YAML holds its answers: they stay out of a handout.
+  copy
+    .querySelectorAll("[data-tutorial-source]")
+    .forEach((element) => element.removeAttribute("data-tutorial-source"));
   copy
     .querySelectorAll<HTMLInputElement>('li[data-checked] input[type="checkbox"]')
     .forEach((box) => {

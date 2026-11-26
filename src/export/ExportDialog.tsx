@@ -34,7 +34,9 @@ import {
 import { pdfPageStyle, savePdf } from "./pdf";
 import { PrintView } from "./PrintView";
 import { revealExport, saveExport, type ExportFile } from "./save";
-import { t } from "@scholarkit/i18n";
+import { t, tn } from "@scholarkit/i18n";
+import { Check, Info } from "lucide-react";
+import { courseSummary } from "./questions";
 
 /** Opens the system's print window, where the reader saves the PDF. */
 const print = (): Promise<void> =>
@@ -54,6 +56,9 @@ const HINTS: Record<Format, string> = {
     "Text you can edit, with headings, lists, tables, images, footnotes and the reference list.",
   ),
   html: t("One file that opens in any browser, with the images inside it."),
+  course: t(
+    "A Common Cartridge file to import in Canvas, Moodle or Brightspace. Pages become pages, and questions become quizzes the platform grades.",
+  ),
 };
 
 const plural = (count: number, one: string, many: string) =>
@@ -69,6 +74,10 @@ async function makeFile(
   if (format === "docx") {
     const { makeDocx } = await import("./docx");
     return { name, extension: "docx", bytes: await makeDocx(root, job) };
+  }
+  if (format === "course") {
+    const { makeCourse } = await import("./course");
+    return { name, extension: "imscc", bytes: await makeCourse(root, job) };
   }
   if (format === "html") {
     const { makeHtml } = await import("./html");
@@ -100,6 +109,59 @@ async function makeFile(
     extension: "zip",
     bytes: await zip.generateAsync({ type: "uint8array" }),
   };
+}
+
+/** What a course export brings along: its pages, its questions, and what stays on a page. */
+function CourseList({ job }: { job: ExportJob }) {
+  const summary = useMemo(() => courseSummary(job), [job]);
+  const rows = [
+    {
+      done: true,
+      text: tn(summary.pages, "{count} page", "{count} pages"),
+    },
+    {
+      done: true,
+      text:
+        summary.questions > 0
+          ? tn(
+              summary.questions,
+              "{count} question, in a quiz the platform grades",
+              "{count} questions, in quizzes the platform grades",
+            )
+          : t(
+              "No questions yet. Quizzes, blanks with one gap and exercises become questions.",
+            ),
+    },
+    ...(summary.onPage > 0
+      ? [
+          {
+            done: false,
+            text: tn(
+              summary.onPage,
+              "{count} block stays on its page: put in order, several blanks or an assignment",
+              "{count} blocks stay on their page: put in order, several blanks or assignments",
+            ),
+          },
+        ]
+      : []),
+  ];
+  return (
+    <div className="mt-4">
+      <p className="text-xs text-muted-foreground">{t("What comes along")}</p>
+      <ul className="mt-1.5 rounded-[7px] border border-border px-2.5 py-1">
+        {rows.map((row, index) => (
+          <li key={index} className="flex min-h-7 items-center gap-2 text-[13px]">
+            {row.done ? (
+              <Check className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+            ) : (
+              <Info className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+            )}
+            <span className="min-w-0 flex-1">{row.text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 type Phase = "choose" | "preparing" | "making" | "open" | "saved";
@@ -360,6 +422,8 @@ export function ExportDialog({
                 ))}
               </div>
             </fieldset>
+
+            {format === "course" && preview && <CourseList job={preview} />}
 
             {onPaper && (
               <fieldset className="mt-4" disabled={busy}>

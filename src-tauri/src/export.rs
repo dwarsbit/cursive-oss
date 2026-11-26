@@ -6,11 +6,12 @@ use tauri_plugin_dialog::DialogExt;
 
 /// The kinds of file an export may be saved as, with the name the save
 /// dialog gives each.
-const KINDS: [(&str, &str); 4] = [
+const KINDS: [(&str, &str); 5] = [
     ("pptx", "PowerPoint"),
     ("docx", "Word"),
     ("html", "HTML"),
     ("zip", "ZIP"),
+    ("imscc", "Common Cartridge"),
 ];
 
 /// The file an export saved last, for "Show in folder".

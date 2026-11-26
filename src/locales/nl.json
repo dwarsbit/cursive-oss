@@ -322,10 +322,28 @@
   "Saving…": "Opslaan…",
   "Try again": "Opnieuw proberen",
   "Opening Cursive…": "Cursive openen…",
+  "Question": "Vraag",
+  "Question {number} of the quiz “{quiz}”.": "Vraag {number} van de quiz ‘{quiz}’.",
+  "Quiz: {page}": "Quiz: {page}",
   "Pages as they print, with references and numbered figures.": "Pagina’s zoals ze worden afgedrukt, met literatuurlijst en genummerde figuren.",
   "One slide for each slide, with text you can edit and the speaker notes in PowerPoint’s notes.": "Eén dia voor elke dia, met tekst die je kunt bewerken en de sprekersnotities in de notities van PowerPoint.",
   "Text you can edit, with headings, lists, tables, images, footnotes and the reference list.": "Tekst die je kunt bewerken, met koppen, lijsten, tabellen, afbeeldingen, voetnoten en de literatuurlijst.",
   "One file that opens in any browser, with the images inside it.": "Eén bestand dat in elke browser opent, met de afbeeldingen erin.",
+  "A Common Cartridge file to import in Canvas, Moodle or Brightspace. Pages become pages, and questions become quizzes the platform grades.": "Een Common Cartridge-bestand om te importeren in Canvas, Moodle of Brightspace. Pagina’s worden pagina’s, en vragen worden quizzen die het platform nakijkt.",
+  "{count} pages": {
+    "one": "{count} pagina",
+    "other": "{count} pagina’s"
+  },
+  "{count} questions, in quizzes the platform grades": {
+    "one": "{count} vraag, in een quiz die het platform nakijkt",
+    "other": "{count} vragen, in quizzen die het platform nakijkt"
+  },
+  "No questions yet. Quizzes, blanks with one gap and exercises become questions.": "Nog geen vragen. Quizzen, invuloefeningen met één gat en opdrachten worden vragen.",
+  "{count} blocks stay on their page: put in order, several blanks or assignments": {
+    "one": "{count} blok blijft op zijn pagina: op volgorde zetten, meerdere gaten of een inleveropdracht",
+    "other": "{count} blokken blijven op hun pagina: op volgorde zetten, meerdere gaten of inleveropdrachten"
+  },
+  "What comes along": "Wat er meegaat",
   "Cursive couldn’t make the file: {error}": "Cursive kon het bestand niet maken: {error}",
   "The print window couldn’t be opened: {error}": "Het afdrukvenster kon niet worden geopend: {error}",
   "This presentation": "Deze presentatie",
@@ -350,6 +368,7 @@
   "Downloaded {file}.": "{file} gedownload.",
   "Show in folder": "Tonen in map",
   "A file couldn't be read.": "Een bestand kon niet worden gelezen.",
+  "Course": "Cursus",
   "Letter": "Letter",
   "Sign in to save a PDF here, or choose Print… and save it from the print window.": "Log in om hier een pdf op te slaan, of kies Afdrukken… en sla hem op vanuit het afdrukvenster.",
   "This server doesn’t make PDFs. Choose Print… and save it from the print window.": "Deze server maakt geen pdf’s. Kies Afdrukken… en sla hem op vanuit het afdrukvenster.",
@@ -575,7 +594,6 @@
     "other": "{count} items"
   },
   "Question, such as: Put the steps of a pilot in order": "Vraag, zoals: Zet de stappen van een pilot op volgorde",
-  "Question": "Vraag",
   "Item {number}": "Item {number}",
   "Exercise": "Opdracht",
   "Learners write an answer and compare it with yours": "Lerenden schrijven een antwoord en vergelijken het met dat van jou",

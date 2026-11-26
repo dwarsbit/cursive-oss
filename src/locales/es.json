@@ -334,10 +334,31 @@
   "Saving…": "Guardando…",
   "Try again": "Volver a intentarlo",
   "Opening Cursive…": "Abriendo Cursive…",
+  "Question": "Pregunta",
+  "Question {number} of the quiz “{quiz}”.": "Pregunta {number} del cuestionario «{quiz}».",
+  "Quiz: {page}": "Cuestionario: {page}",
   "Pages as they print, with references and numbered figures.": "Las páginas tal como se imprimen, con referencias y figuras numeradas.",
   "One slide for each slide, with text you can edit and the speaker notes in PowerPoint’s notes.": "Una diapositiva por cada diapositiva, con texto que puedes editar y las notas del orador en las notas de PowerPoint.",
   "Text you can edit, with headings, lists, tables, images, footnotes and the reference list.": "Texto que puedes editar, con encabezados, listas, tablas, imágenes, notas al pie y la lista de referencias.",
   "One file that opens in any browser, with the images inside it.": "Un archivo que se abre en cualquier navegador, con las imágenes dentro.",
+  "A Common Cartridge file to import in Canvas, Moodle or Brightspace. Pages become pages, and questions become quizzes the platform grades.": "Un archivo Common Cartridge para importar en Canvas, Moodle o Brightspace. Las páginas se convierten en páginas, y las preguntas en cuestionarios que la plataforma califica.",
+  "{count} pages": {
+    "many": "{count} páginas",
+    "one": "{count} página",
+    "other": "{count} páginas"
+  },
+  "{count} questions, in quizzes the platform grades": {
+    "many": "{count} preguntas, en cuestionarios que la plataforma califica",
+    "one": "{count} pregunta, en un cuestionario que la plataforma califica",
+    "other": "{count} preguntas, en cuestionarios que la plataforma califica"
+  },
+  "No questions yet. Quizzes, blanks with one gap and exercises become questions.": "Aún no hay preguntas. Los cuestionarios, los huecos con un solo hueco y los ejercicios se convierten en preguntas.",
+  "{count} blocks stay on their page: put in order, several blanks or assignments": {
+    "many": "{count} bloques se quedan en su página: ordenar, varios huecos o tareas",
+    "one": "{count} bloque se queda en su página: ordenar, varios huecos o una tarea",
+    "other": "{count} bloques se quedan en su página: ordenar, varios huecos o tareas"
+  },
+  "What comes along": "Qué se incluye",
   "Cursive couldn’t make the file: {error}": "Cursive no ha podido crear el archivo: {error}",
   "The print window couldn’t be opened: {error}": "No se ha podido abrir la ventana de impresión: {error}",
   "This presentation": "Esta presentación",
@@ -362,6 +383,7 @@
   "Downloaded {file}.": "Se ha descargado {file}.",
   "Show in folder": "Mostrar en la carpeta",
   "A file couldn't be read.": "No se ha podido leer un archivo.",
+  "Course": "Curso",
   "Letter": "Carta",
   "Sign in to save a PDF here, or choose Print… and save it from the print window.": "Inicia sesión para guardar un PDF aquí, o elige Imprimir… y guárdalo desde la ventana de impresión.",
   "This server doesn’t make PDFs. Choose Print… and save it from the print window.": "Este servidor no crea PDF. Elige Imprimir… y guárdalo desde la ventana de impresión.",
@@ -592,7 +614,6 @@
     "other": "{count} elementos"
   },
   "Question, such as: Put the steps of a pilot in order": "Pregunta, como: Ordena los pasos de un estudio piloto",
-  "Question": "Pregunta",
   "Item {number}": "Elemento {number}",
   "Exercise": "Ejercicio",
   "Learners write an answer and compare it with yours": "Los estudiantes escriben una respuesta y la comparan con la tuya",

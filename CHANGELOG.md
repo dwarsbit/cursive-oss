@@ -5,6 +5,7 @@
 - In the browser, the Markdown view shows the carets and selections of the people working with you, with their names, as the page does. A name shows when they type or move, then fades; point at their caret to see it again.
 - In the browser, clicking a face in the header opens the page that person is on, and the status line says who is working with you, such as "Live with Anna and Tom". When the connection drops, it says your changes are kept.
 - The faces and carets of the people in a project have the same colors as in Polemic.
+- Export a page or the whole project as a **Course**: one Common Cartridge file to import in Canvas, Moodle or Brightspace. Pages become pages, with their images and equations, and each page's quizzes, blanks with one gap and exercises become one quiz after it, which the platform grades. Put in order, blanks with several gaps and assignments stay on their page.
 
 ## 0.5.0 (2026-11-26)
 

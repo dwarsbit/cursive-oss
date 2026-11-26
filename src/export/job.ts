@@ -9,13 +9,14 @@ import { t } from "@scholarkit/i18n";
 export type Scope = "page" | "project";
 
 /** The kinds of file an export makes. */
-export type Format = "pdf" | "pptx" | "docx" | "html";
+export type Format = "pdf" | "pptx" | "docx" | "html" | "course";
 
 export const FORMATS: Array<{ id: Format; label: string; extension: string }> = [
   { id: "pdf", label: "PDF", extension: "pdf" },
   { id: "pptx", label: "PowerPoint", extension: "pptx" },
   { id: "docx", label: "Word", extension: "docx" },
   { id: "html", label: "HTML", extension: "html" },
+  { id: "course", label: t("Course"), extension: "imscc" },
 ];
 
 export const isFormat = (value: unknown): value is Format =>
@@ -108,8 +109,8 @@ export const fileName = (name: string) =>
 
 /**
  * What to draw for an export, or null when there is nothing to export.
- * PowerPoint takes only presentations, one slide per sheet. Word and
- * HTML put everything on paper, as a PDF with speaker notes does.
+ * PowerPoint takes only presentations, one slide per sheet. Word, HTML
+ * and a course put everything on paper, as a PDF with speaker notes does.
  */
 export function buildJob(
   project: Project,
@@ -118,7 +119,7 @@ export function buildJob(
 ): ExportJob | null {
   const format = options.format ?? "pdf";
   if (format === "pptx") return slidesJob(project, active, options.scope);
-  const paper = format === "docx" || format === "html";
+  const paper = format === "docx" || format === "html" || format === "course";
   if (options.scope === "page") {
     if (!active || !(active in project.pages)) return null;
     const only = part(active, project.pages[active]);

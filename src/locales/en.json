@@ -322,10 +322,28 @@
   "Saving…": "Saving…",
   "Try again": "Try again",
   "Opening Cursive…": "Opening Cursive…",
+  "Question": "Question",
+  "Question {number} of the quiz “{quiz}”.": "Question {number} of the quiz “{quiz}”.",
+  "Quiz: {page}": "Quiz: {page}",
   "Pages as they print, with references and numbered figures.": "Pages as they print, with references and numbered figures.",
   "One slide for each slide, with text you can edit and the speaker notes in PowerPoint’s notes.": "One slide for each slide, with text you can edit and the speaker notes in PowerPoint’s notes.",
   "Text you can edit, with headings, lists, tables, images, footnotes and the reference list.": "Text you can edit, with headings, lists, tables, images, footnotes and the reference list.",
   "One file that opens in any browser, with the images inside it.": "One file that opens in any browser, with the images inside it.",
+  "A Common Cartridge file to import in Canvas, Moodle or Brightspace. Pages become pages, and questions become quizzes the platform grades.": "A Common Cartridge file to import in Canvas, Moodle or Brightspace. Pages become pages, and questions become quizzes the platform grades.",
+  "{count} pages": {
+    "one": "{count} page",
+    "other": "{count} pages"
+  },
+  "{count} questions, in quizzes the platform grades": {
+    "one": "{count} question, in a quiz the platform grades",
+    "other": "{count} questions, in quizzes the platform grades"
+  },
+  "No questions yet. Quizzes, blanks with one gap and exercises become questions.": "No questions yet. Quizzes, blanks with one gap and exercises become questions.",
+  "{count} blocks stay on their page: put in order, several blanks or assignments": {
+    "one": "{count} block stays on its page: put in order, several blanks or an assignment",
+    "other": "{count} blocks stay on their page: put in order, several blanks or assignments"
+  },
+  "What comes along": "What comes along",
   "Cursive couldn’t make the file: {error}": "Cursive couldn’t make the file: {error}",
   "The print window couldn’t be opened: {error}": "The print window couldn’t be opened: {error}",
   "This presentation": "This presentation",
@@ -350,6 +368,7 @@
   "Downloaded {file}.": "Downloaded {file}.",
   "Show in folder": "Show in folder",
   "A file couldn't be read.": "A file couldn't be read.",
+  "Course": "Course",
   "Letter": "Letter",
   "Sign in to save a PDF here, or choose Print… and save it from the print window.": "Sign in to save a PDF here, or choose Print… and save it from the print window.",
   "This server doesn’t make PDFs. Choose Print… and save it from the print window.": "This server doesn’t make PDFs. Choose Print… and save it from the print window.",
@@ -575,7 +594,6 @@
     "other": "{count} items"
   },
   "Question, such as: Put the steps of a pilot in order": "Question, such as: Put the steps of a pilot in order",
-  "Question": "Question",
   "Item {number}": "Item {number}",
   "Exercise": "Exercise",
   "Learners write an answer and compare it with yours": "Learners write an answer and compare it with yours",
