@@ -29,6 +29,8 @@ export interface Usage {
   compile: { usedPercent: number; resetsAt?: string };
   /** limit is null: unlimited. */
   reviewLinks: { count: number; limit: number | null };
+  /** The share of the month's assistant use on our model, 0 to 100; null on Free. Older servers leave it out. */
+  assistant?: { usedPercent: number; resetsAt: string } | null;
 }
 
 /** The app a project belongs to on the server. */
