@@ -9,7 +9,7 @@ import type { Run } from "./apa";
  * citation as text. A page names its style in its front matter, as
  * Pandoc does, by the name of the style's CSL file: `csl: ieee`.
  *
- * The server has a copy of this file (dwarsbit/polemic-server,
+ * The server has a copy of this file (dwarsbit/scholarkit,
  * apps/api/src/sites/styles.ts): change both.
  */
 export type StyleId =

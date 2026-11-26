@@ -22,7 +22,7 @@ import { t } from "@scholarkit/i18n";
  * The file holds the ids, never the numbers: the page counts each kind
  * in the order it has them, and a cross-reference shows "Figure 2".
  * The server numbers them the same way when it publishes a site
- * (dwarsbit/polemic-server, apps/api/src/sites/numbering.ts).
+ * (dwarsbit/scholarkit, apps/api/src/sites/numbering.ts).
  */
 export type TargetKind = "fig" | "tbl" | "eq";
 

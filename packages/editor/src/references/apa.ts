@@ -4,7 +4,7 @@ import { familyName, type CiteItem, type Reference } from "./reference";
  * APA style (7th edition) for citations and the reference list. The
  * output is plain text in runs, some of them italic, so the editor,
  * the PDF export and the server all draw it their own way. The server
- * has a copy of this file (dwarsbit/polemic-server,
+ * has a copy of this file (dwarsbit/scholarkit,
  * apps/api/src/sites/references.ts): change both.
  */
 export interface Run {

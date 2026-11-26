@@ -3,7 +3,7 @@ import { isMap, parseDocument, stringify } from "yaml";
 /**
  * The tutorial blocks. In Markdown each is a fenced block named after it
  * with YAML inside, so other tools show it as code. The server reads the
- * same YAML when it publishes a site (dwarsbit/polemic-server,
+ * same YAML when it publishes a site (dwarsbit/scholarkit,
  * apps/api/src/sites/learn.ts).
  */
 export interface Quiz {

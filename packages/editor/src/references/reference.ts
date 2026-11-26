@@ -9,7 +9,7 @@ import { isSeq, parseDocument, stringify } from "yaml";
  * `bibliography` fence with a YAML list inside. A reference that came
  * from Zotero keeps the item's key and version under `zotero`, so
  * Cursive can tell when the item changed there. The server reads the
- * same fence when it publishes a site (dwarsbit/polemic-server,
+ * same fence when it publishes a site (dwarsbit/scholarkit,
  * apps/api/src/sites/references.ts).
  *
  *     ```bibliography

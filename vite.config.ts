@@ -45,8 +45,8 @@ export default defineConfig(({ mode }) => ({
     port: 1430,
     strictPort: true,
     watch: { ignored: ["**/src-tauri/**"] },
-    // `pnpm dev:web` runs the web build against a Polemic server on
-    // this computer (polemic-server's `pnpm dev`).
+    // `pnpm dev:web` runs the web build against a Scholarkit server on
+    // this computer (`pnpm dev` in Scholarkit's apps/api).
     proxy:
       mode === "web"
         ? {

@@ -217,10 +217,9 @@ pnpm dev:web      # the browser app as the server serves it, at /cursive/
 ```
 
 `pnpm dev` keeps a sample project in the browser's own storage.
-`pnpm dev:web` needs a Polemic server on this computer
-([polemic-server](https://github.com/dwarsbit/polemic-server)'s
-`pnpm dev:api`), or the one `CURSIVE_SERVER` names; sign in on that server
-first. The desktop app signs in to `https://app.polemicapp.com`; start it
+`pnpm dev:web` needs a Scholarkit server on this computer (`pnpm dev` in
+the Scholarkit monorepo's `apps/api`), or the one `CURSIVE_SERVER` names;
+sign in on that server first. The desktop app signs in to `https://app.polemicapp.com`; start it
 with `CURSIVE_SERVER=http://localhost:3000` for a server on this computer.
 
 ### Check
