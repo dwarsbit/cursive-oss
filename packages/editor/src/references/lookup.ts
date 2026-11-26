@@ -7,12 +7,74 @@ import {
 import { t } from "@scholarkit/i18n";
 
 /**
- * A work found by its DOI (at Crossref) or its ISBN (at Open Library),
- * for a work that is in no library yet. Typing `@10.1038/nature14539`
- * or `@978-0-201-13447-6` in the text looks it up.
+ * A work found by its DOI, its ISBN, its arXiv ID or its PubMed ID,
+ * for a work that is in no library yet. Typing `@10.1038/nature14539`,
+ * `@978-0-201-13447-6`, `@arXiv:1706.03762` or `@PMID:31452104` in the
+ * text looks it up.
+ *
+ * The Scholarkit server does the looking up (GET /api/lookup/work, in
+ * apps/api/src/lookup.ts): it asks Crossref, DataCite, Open Library or
+ * PubMed. The apps never ask those services themselves, so a lookup
+ * needs the account: each app hands its server to setWorkLookup.
  */
 
-export type Lookup = { kind: "doi"; id: string } | { kind: "isbn"; id: string };
+export type Lookup =
+  | { kind: "doi"; id: string }
+  | { kind: "isbn"; id: string }
+  /** `1706.03762`, or an older one like `hep-th/9901001`, without its version. */
+  | { kind: "arxiv"; id: string }
+  /** A PubMed ID, `31452104`, or a PubMed Central one, `PMC6744368`. */
+  | { kind: "pubmed"; id: string };
+
+export type LookupKind = Lookup["kind"];
+
+/** A work as the server's lookup answers it (`lookedUpWork` in @scholarkit/contracts). */
+export interface LookedUpWork {
+  type: ReferenceType;
+  author: string[];
+  editor: string[];
+  title: string;
+  year: string;
+  container: string;
+  publisher: string;
+  place: string;
+  volume: string;
+  issue: string;
+  pages: string;
+  doi: string;
+  url: string;
+  isbn: string;
+  arxiv: string;
+  pmid: string;
+}
+
+/** A work as a lookup found it: a reference, with the IDs a reference doesn't keep. */
+export type FoundWork = Reference & { isbn: string; arxiv: string; pmid: string };
+
+/** Asks the server for a work; null when there is none. */
+export type WorkLookup = (kind: LookupKind, id: string) => Promise<LookedUpWork | null>;
+
+let workLookup: WorkLookup | null = null;
+
+/** Where lookups go: the app's Scholarkit server. Without it, a lookup asks to sign in. */
+export function setWorkLookup(lookup: WorkLookup | null) {
+  workLookup = lookup;
+}
+
+/**
+ * An arXiv ID, bare or after `arXiv:`, or an arxiv.org address. New IDs
+ * are `YYMM.NNNNN`, older ones name the archive: `math.GT/0309136`.
+ */
+const ARXIV =
+  /^(?:arxiv:\s*|(?:https?:\/\/)?(?:www\.|export\.)?arxiv\.org\/(?:abs|pdf|html)\/)?(\d{2}(?:0[1-9]|1[0-2])\.\d{4,5}|[a-z]+(?:-[a-z]+)?(?:\.[a-z]{2})?\/\d{7})(?:v\d+)?(?:\.pdf)?\/?$/i;
+
+/** A PubMed ID after `PMID`, or a PubMed address; never a bare number. */
+const PUBMED =
+  /^(?:pmid:?\s*|(?:https?:\/\/)?(?:www\.)?(?:pubmed\.ncbi\.nlm\.nih\.gov|ncbi\.nlm\.nih\.gov\/pubmed)\/)(\d{1,9})\/?$/i;
+
+/** A PubMed Central ID, bare or as an address. */
+const PMC =
+  /^(?:pmcid:?\s*|(?:https?:\/\/)?(?:www\.)?(?:ncbi\.nlm\.nih\.gov\/pmc|pmc\.ncbi\.nlm\.nih\.gov)\/articles\/)?(pmc\d{1,9})\/?$/i;
 
 const DOI = /^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:)?(10\.\d{4,9}\/\S+)$/i;
 
@@ -34,11 +96,24 @@ function isbnOk(digits: string): boolean {
   return false;
 }
 
-/** What a typed query looks up: a DOI, an ISBN or nothing. */
+/** An old arXiv ID as arXiv writes it: the archive in lower case, the subject class in capitals. */
+function arxivId(id: string): string {
+  const old = /^([a-z-]+)(?:\.([a-z]{2}))?\/(\d{7})$/i.exec(id);
+  if (!old) return id;
+  return `${old[1].toLowerCase()}${old[2] ? `.${old[2].toUpperCase()}` : ""}/${old[3]}`;
+}
+
+/** What a typed query looks up: a DOI, an ISBN, an arXiv or PubMed ID, or nothing. */
 export function lookupOf(query: string): Lookup | null {
   const text = query.trim().replace(/[.,;]+$/, "");
   const doi = DOI.exec(text);
   if (doi) return { kind: "doi", id: doi[1] };
+  const arxiv = ARXIV.exec(text);
+  if (arxiv) return { kind: "arxiv", id: arxivId(arxiv[1]) };
+  const pubmed = PUBMED.exec(text);
+  if (pubmed) return { kind: "pubmed", id: pubmed[1] };
+  const pmc = PMC.exec(text);
+  if (pmc) return { kind: "pubmed", id: pmc[1].toUpperCase() };
   const digits = text
     .replace(/^isbn:?/i, "")
     .replace(/[\s-]/g, "")
@@ -46,153 +121,42 @@ export function lookupOf(query: string): Lookup | null {
   return isbnOk(digits) ? { kind: "isbn", id: digits } : null;
 }
 
-const CROSSREF_TYPES: Record<string, ReferenceType> = {
-  "journal-article": "article",
-  "posted-content": "article",
-  book: "book",
-  monograph: "book",
-  "edited-book": "book",
-  "reference-book": "book",
-  "book-chapter": "chapter",
-  "book-section": "chapter",
-  "book-part": "chapter",
-  "reference-entry": "chapter",
-  "proceedings-article": "conference",
-  dissertation: "thesis",
-  report: "report",
-};
-
-interface CrossrefName {
-  family?: string;
-  given?: string;
-  name?: string;
-}
-
-/** A work as Crossref's `message` has it. */
-export interface CrossrefWork {
-  type?: string;
-  title?: string[];
-  author?: CrossrefName[];
-  editor?: CrossrefName[];
-  issued?: { "date-parts"?: Array<Array<number | null>> };
-  "container-title"?: string[];
-  publisher?: string;
-  "publisher-location"?: string;
-  volume?: string;
-  issue?: string;
-  page?: string;
-  DOI?: string;
-  URL?: string;
-  institution?: Array<{ name?: string }>;
-}
-
-const crossrefName = (name: CrossrefName): string =>
-  name.name?.trim() ||
-  [name.family?.trim(), name.given?.trim()].filter(Boolean).join(", ");
-
-/** Crossref's titles carry a little markup, such as `<i>`. */
-const plain = (text: string | undefined): string =>
-  (text ?? "")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-
-export function crossrefReference(
-  work: CrossrefWork,
-  taken: Iterable<string>,
-): Reference {
-  const ref = emptyReference("");
-  ref.type = CROSSREF_TYPES[work.type ?? ""] ?? "other";
-  ref.author = (work.author ?? []).map(crossrefName).filter(Boolean);
-  ref.editor = (work.editor ?? []).map(crossrefName).filter(Boolean);
-  ref.title = plain(work.title?.[0]);
-  const year = work.issued?.["date-parts"]?.[0]?.[0];
-  ref.year = year ? String(year) : "";
-  ref.container = plain(work["container-title"]?.[0]);
-  ref.publisher =
-    ref.type === "thesis"
-      ? plain(work.institution?.[0]?.name) || plain(work.publisher)
-      : plain(work.publisher);
-  ref.place = plain(work["publisher-location"]);
-  ref.volume = plain(work.volume);
-  ref.issue = plain(work.issue);
-  ref.pages = plain(work.page).replace(/[–—]/g, "-");
-  ref.doi = plain(work.DOI);
+/** The server's answer as a reference, with a key no other reference has. */
+export function foundWork(work: LookedUpWork, taken: Iterable<string>): FoundWork {
+  const ref: FoundWork = {
+    ...emptyReference(""),
+    type: work.type,
+    author: work.author,
+    editor: work.editor,
+    title: work.title,
+    year: work.year,
+    container: work.container,
+    publisher: work.publisher,
+    place: work.place,
+    volume: work.volume,
+    issue: work.issue,
+    pages: work.pages,
+    doi: work.doi,
+    url: work.url,
+    isbn: work.isbn,
+    arxiv: work.arxiv,
+    pmid: work.pmid,
+  };
   ref.key = suggestKey(ref, taken);
   return ref;
 }
 
-/** A book as Open Library's books API has it, with `jscmd=data`. */
-export interface OpenLibraryBook {
-  title?: string;
-  subtitle?: string;
-  authors?: Array<{ name?: string }>;
-  publishers?: Array<{ name?: string }>;
-  publish_places?: Array<{ name?: string }>;
-  publish_date?: string;
-  url?: string;
-}
-
-/** "Donald E. Knuth" as "Knuth, Donald E.". */
-const familyFirst = (name: string): string => {
-  const words = name.trim().split(/\s+/);
-  if (name.includes(",") || words.length < 2) return name.trim();
-  return `${words[words.length - 1]}, ${words.slice(0, -1).join(" ")}`;
-};
-
-export function openLibraryReference(
-  book: OpenLibraryBook,
-  taken: Iterable<string>,
-): Reference {
-  const ref = emptyReference("");
-  ref.type = "book";
-  ref.author = (book.authors ?? [])
-    .map((author) => familyFirst(author.name ?? ""))
-    .filter(Boolean);
-  ref.title = [book.title, book.subtitle]
-    .map((part) => part?.trim())
-    .filter(Boolean)
-    .join(": ");
-  ref.year = /\d{4}/.exec(book.publish_date ?? "")?.[0] ?? "";
-  ref.publisher = book.publishers?.[0]?.name?.trim() ?? "";
-  ref.place = book.publish_places?.[0]?.name?.trim() ?? "";
-  ref.key = suggestKey(ref, taken);
-  return ref;
-}
-
-async function getJson(url: string): Promise<unknown> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
-  const response = await fetch(url, {
-    signal: controller.signal,
-    headers: { Accept: "application/json" },
-  })
-    .catch(() => null)
-    .finally(() => clearTimeout(timer));
-  if (!response) throw new Error(t("The lookup didn't answer. Check your connection."));
-  if (response.status === 404) return null;
-  if (!response.ok)
-    throw new Error(
-      t("The lookup answered {status}. Try again later.", { status: response.status }),
-    );
-  return (await response.json()) as unknown;
-}
-
-/** The work with this DOI or ISBN; null when there is none. */
+/** The work with this DOI, ISBN, arXiv or PubMed ID; null when there is none. */
 export async function lookUp(
   lookup: Lookup,
   taken: Iterable<string>,
-): Promise<Reference | null> {
-  if (lookup.kind === "doi") {
-    const data = (await getJson(
-      `https://api.crossref.org/works/${lookup.id.split("/").map(encodeURIComponent).join("/")}`,
-    )) as { message?: CrossrefWork } | null;
-    return data?.message ? crossrefReference(data.message, taken) : null;
-  }
-  const key = `ISBN:${lookup.id}`;
-  const data = (await getJson(
-    `https://openlibrary.org/api/books?bibkeys=${encodeURIComponent(key)}&format=json&jscmd=data`,
-  )) as Record<string, OpenLibraryBook> | null;
-  const book = data?.[key];
-  return book?.title ? openLibraryReference(book, taken) : null;
+): Promise<FoundWork | null> {
+  if (!workLookup)
+    throw new Error(
+      t(
+        "Sign in to your Scholarkit account to look up DOIs, ISBNs, arXiv and PubMed IDs.",
+      ),
+    );
+  const work = await workLookup(lookup.kind, lookup.id);
+  return work ? foundWork(work, taken) : null;
 }

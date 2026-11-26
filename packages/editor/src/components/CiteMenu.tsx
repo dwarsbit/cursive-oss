@@ -34,6 +34,14 @@ import { cn } from "../lib/cn";
 import { messageOf } from "./Dialog";
 import { t } from "@scholarkit/i18n";
 
+/** What a lookup's group is called, for screen readers: the names of the IDs. */
+const LOOKUP_NAMES = {
+  doi: "DOI",
+  isbn: "ISBN",
+  arxiv: "arXiv",
+  pubmed: "PubMed",
+} as const;
+
 type Option =
   | { kind: "page"; ref: Reference }
   | { kind: "target"; target: Target }
@@ -173,7 +181,7 @@ interface Found {
 /**
  * The works to cite under a typed `@`: the page's first, then its
  * figures, tables and equations, then Zotero's and the BibTeX files'.
- * A DOI or an ISBN is looked up.
+ * A DOI, an ISBN, an arXiv or PubMed ID is looked up on the server.
  */
 export function CiteMenu({
   state,
@@ -282,7 +290,7 @@ export function CiteMenu({
     };
   }, [query, hasSources]);
 
-  // A DOI or an ISBN is looked up once the typing rests.
+  // A DOI, an ISBN, an arXiv or PubMed ID is looked up once the typing rests.
   const lookupKey = lookup ? `${lookup.kind}:${lookup.id}` : "";
   useEffect(() => {
     const wanted = lookupOf(query);
@@ -297,9 +305,12 @@ export function CiteMenu({
               ref,
               problem: ref
                 ? null
-                : wanted.kind === "doi"
-                  ? t("No work has this DOI.")
-                  : t("Open Library has no book with this ISBN."),
+                : {
+                    doi: t("No work has this DOI."),
+                    isbn: t("Open Library has no book with this ISBN."),
+                    arxiv: t("arXiv has no preprint with this ID."),
+                    pubmed: t("PubMed has no article with this ID."),
+                  }[wanted.kind],
             });
         })
         .catch((error: unknown) => {
@@ -486,16 +497,28 @@ export function CiteMenu({
           </div>
         )}
         {lookup && (
-          <div role="group" aria-label={lookup.kind === "doi" ? "DOI" : "ISBN"}>
+          <div role="group" aria-label={LOOKUP_NAMES[lookup.kind]}>
             <div className={GROUP_HEAD}>
-              {lookup.kind === "doi" ? t("Found by DOI") : t("Found by ISBN")}
+              {
+                {
+                  doi: t("Found by DOI"),
+                  isbn: t("Found by ISBN"),
+                  arxiv: t("Found by arXiv ID"),
+                  pubmed: t("Found by PubMed ID"),
+                }[lookup.kind]
+              }
             </div>
             {rows(fromLookup)}
             {!lookedUp && (
               <p className={NOTE}>
-                {lookup.kind === "doi"
-                  ? t("Looking up the DOI…")
-                  : t("Looking up the ISBN…")}
+                {
+                  {
+                    doi: t("Looking up the DOI…"),
+                    isbn: t("Looking up the ISBN…"),
+                    arxiv: t("Looking up the arXiv ID…"),
+                    pubmed: t("Looking up the PubMed ID…"),
+                  }[lookup.kind]
+                }
               </p>
             )}
             {lookedUp?.problem && <p className={NOTE}>{lookedUp.problem}</p>}
@@ -540,7 +563,7 @@ export function CiteMenu({
             <span className="inline-flex items-center gap-1.5">
               <BookMarked className="size-3.5" aria-hidden />
               {t(
-                "Connect Zotero or add a BibTeX file to cite works from your library, or type a DOI or an ISBN.",
+                "Connect Zotero or add a BibTeX file to cite works from your library, or type a DOI, an ISBN, or an arXiv or PubMed ID.",
               )}
             </span>
             <button

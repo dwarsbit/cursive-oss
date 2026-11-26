@@ -33,6 +33,7 @@ import {
 import { t } from "@scholarkit/i18n";
 import { rich } from "@scholarkit/i18n/react";
 import { saveBeforeSwitch } from "@/lib/languages";
+import { setWorkLookup } from "@scholarkit/editor/references/lookup";
 
 const server = new Server(browserTransport);
 
@@ -316,6 +317,11 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
  * goes to the server's sign-in page and comes back.
  */
 export function Web() {
+  // DOIs, ISBNs, arXiv and PubMed IDs are looked up on the server, never at the source.
+  useEffect(() => {
+    setWorkLookup((kind, id) => server.lookUpWork(kind, id));
+    return () => setWorkLookup(null);
+  }, []);
   const path = useSyncExternalStore(subscribeToAddress, () => window.location.pathname);
 
   // One address for the list, and old links (/cursive/<id>) land on the project's new address.

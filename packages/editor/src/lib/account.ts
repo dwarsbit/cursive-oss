@@ -1,5 +1,6 @@
 import { fromBase64, toBase64 } from "./project-doc";
 import { t } from "@scholarkit/i18n";
+import type { LookedUpWork, LookupKind } from "../references/lookup";
 
 /**
  * The Scholarkit server, as the apps use it: the account, the account's
@@ -150,6 +151,46 @@ export class AccountServer {
       error?.error ?? error?.code ?? "error",
       typeof error?.message === "string" && error.message ? error.message : fallback,
     );
+  }
+
+  /**
+   * Looks a work up by its DOI, ISBN, arXiv or PubMed ID on the server,
+   * which asks Crossref, DataCite, Open Library or PubMed. Null when
+   * there is no such work; signed in only.
+   */
+  async lookUpWork(kind: LookupKind, id: string): Promise<LookedUpWork | null> {
+    const query = new URLSearchParams({ kind, id });
+    try {
+      const answer = await this.call<{ work: LookedUpWork }>(
+        "GET",
+        `/api/lookup/work?${query.toString()}`,
+      );
+      return answer.work;
+    } catch (error) {
+      if (!(error instanceof ServerError)) throw error;
+      if (error.status === 404 && error.code === "not_found") return null;
+      if (error.status === 401)
+        throw new ServerError(
+          401,
+          error.code,
+          t(
+            "Sign in to your Scholarkit account to look up DOIs, ISBNs, arXiv and PubMed IDs.",
+          ),
+        );
+      if (error.status === 429)
+        throw new ServerError(
+          429,
+          error.code,
+          t("Too many lookups at once. Wait a moment."),
+        );
+      if (error.status === 502)
+        throw new ServerError(
+          502,
+          error.code,
+          t("The lookup didn't get an answer. Try again later."),
+        );
+      throw error;
+    }
   }
 
   /** The signed-in account, or null when nobody is signed in. */

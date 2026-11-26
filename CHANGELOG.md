@@ -11,6 +11,8 @@
 - The menu under your avatar is the same in Cursive, Polemic, Binder and on your Scholarkit home page. It shows your plan, the storage you use, how much of today's cloud compile time you've used and your active review links, with **Upgrade to Plus** on Free and **Upgrade to Pro** on Plus.
 - Starting a project looks the same in Cursive, Polemic and Binder: one card with the name, templates as tiles and **Create**. Pick **Blank**, one of four templates or **More templates…** for all of them, on the web and in the desktop app. In the browser the page only makes projects; your projects are on your Scholarkit home page, where you can also rename and delete them. In the desktop app, your recent projects stay under the card.
 - The desktop app's **Notes**, **Presentation** and **Tutorial** choices are now **Blank**, **Lecture slides** and the new **Tutorial** template: one lesson with an explanation and a quiz.
+- Type `@arXiv:1706.03762` or `@PMID:31452104` to cite a preprint or an article by its arXiv or PubMed ID, as you can with a DOI or an ISBN.
+- Looking up a DOI, an ISBN, an arXiv or a PubMed ID now goes through your Scholarkit account, so it needs you to be signed in. Cursive no longer contacts Crossref, Open Library and the other sources itself.
 
 ## 0.4.0 (2026-11-24)
 

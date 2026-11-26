@@ -65,7 +65,7 @@ now you run it from the source, as described under [Develop](#develop).
   numbers, checkboxes and links.
 - **References**: type `@` to cite a work from the Zotero app on your
   computer, your library or group libraries at zotero.org, a BibTeX file, or
-  by its DOI or ISBN. The page keeps its own copy of each work, so it reads
+  by its DOI, ISBN, arXiv ID or PubMed ID, which your Scholarkit account looks up. The page keeps its own copy of each work, so it reads
   without Zotero, and shows a reference list in APA, Chicago, Harvard, IEEE,
   MLA or Vancouver style. When a work changes in Zotero, the page says so and
   you update it or keep your copy. Citations are written `[@key]` and the
@@ -252,7 +252,7 @@ pnpm build:web    # the browser app, into dist-web
     properties
   - `src/references`: citations, the `bibliography` block, the citation
     styles (`apa.ts`, `styles.ts`), Zotero (`zotero.ts`), BibTeX files
-    (`bibtex.ts`) and DOI and ISBN lookup (`lookup.ts`)
+    (`bibtex.ts`) and DOI, ISBN, arXiv and PubMed lookup through the server (`lookup.ts`)
   - `src/lib`: a page as a Markdown file (`page-file.ts`), its properties,
     links between pages and search
 - `src/components`: the sidebar and the dialogs

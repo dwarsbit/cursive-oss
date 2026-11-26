@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { mayHold } from "./context";
-import { crossrefReference, lookupOf, openLibraryReference } from "./lookup";
+import { lookUp, lookupOf, setWorkLookup } from "./lookup";
 import { librariesOf } from "./zotero";
 
 describe("Looking works up", () => {
@@ -22,53 +22,85 @@ describe("Looking works up", () => {
     expect(lookupOf("vaswani")).toBeNull();
   });
 
-  it("reads a work from Crossref", () => {
-    const ref = crossrefReference(
-      {
-        type: "journal-article",
-        title: ["Deep <i>learning</i>"],
-        author: [
-          { family: "LeCun", given: "Yann" },
-          { family: "Bengio", given: "Yoshua" },
-        ],
-        issued: { "date-parts": [[2015, 5, 27]] },
-        "container-title": ["Nature"],
-        volume: "521",
-        issue: "7553",
-        page: "436-444",
-        DOI: "10.1038/nature14539",
-      },
-      [],
-    );
-    expect(ref).toMatchObject({
-      key: "lecun2015",
-      type: "article",
-      author: ["LeCun, Yann", "Bengio, Yoshua"],
-      title: "Deep learning",
-      year: "2015",
-      container: "Nature",
-      pages: "436-444",
-      doi: "10.1038/nature14539",
+  it("tells an arXiv ID, bare, after arXiv: or as a link", () => {
+    for (const typed of [
+      "1706.03762",
+      "arXiv:1706.03762",
+      "arxiv: 1706.03762v7",
+      "https://arxiv.org/abs/1706.03762",
+      "arxiv.org/pdf/1706.03762v2.pdf",
+      "https://arxiv.org/abs/1706.03762v5/",
+    ])
+      expect(lookupOf(typed), typed).toEqual({ kind: "arxiv", id: "1706.03762" });
+    expect(lookupOf("2401.12345")).toEqual({ kind: "arxiv", id: "2401.12345" });
+    expect(lookupOf("hep-th/9901001")).toEqual({ kind: "arxiv", id: "hep-th/9901001" });
+    expect(lookupOf("arXiv:math.gt/0309136v1")).toEqual({
+      kind: "arxiv",
+      id: "math.GT/0309136",
     });
+    // A thirteenth month is no arXiv ID; a decimal number stays a thought.
+    expect(lookupOf("1713.03762")).toBeNull();
+    expect(lookupOf("3.14159")).toBeNull();
   });
 
-  it("reads a book from Open Library", () => {
-    const ref = openLibraryReference(
-      {
-        title: "The TeXbook",
-        authors: [{ name: "Donald E. Knuth" }],
-        publishers: [{ name: "Addison-Wesley" }],
-        publish_date: "1984",
-      },
-      ["knuth1984"],
-    );
-    expect(ref).toMatchObject({
-      key: "knuth1984a",
-      type: "book",
-      author: ["Knuth, Donald E."],
-      publisher: "Addison-Wesley",
-      year: "1984",
+  it("tells a PubMed ID only after PMID or in a link", () => {
+    expect(lookupOf("PMID: 31452104")).toEqual({ kind: "pubmed", id: "31452104" });
+    expect(lookupOf("pmid:31452104")).toEqual({ kind: "pubmed", id: "31452104" });
+    expect(lookupOf("https://pubmed.ncbi.nlm.nih.gov/31452104/")).toEqual({
+      kind: "pubmed",
+      id: "31452104",
     });
+    expect(lookupOf("www.ncbi.nlm.nih.gov/pubmed/31452104")).toEqual({
+      kind: "pubmed",
+      id: "31452104",
+    });
+    expect(lookupOf("PMC6744368")).toEqual({ kind: "pubmed", id: "PMC6744368" });
+    expect(lookupOf("https://pmc.ncbi.nlm.nih.gov/articles/PMC6744368/")).toEqual({
+      kind: "pubmed",
+      id: "PMC6744368",
+    });
+    // A bare number may be anything: a year, a page, a thought.
+    expect(lookupOf("31452104")).toBeNull();
+    expect(lookupOf("2019")).toBeNull();
+  });
+
+  it("asks the server, never the source, and keys what it finds", async () => {
+    const asked: string[] = [];
+    setWorkLookup(async (kind, id) => {
+      asked.push(`${kind}:${id}`);
+      return id === "1706.03762"
+        ? {
+            type: "article",
+            author: ["Vaswani, Ashish", "Shazeer, Noam"],
+            editor: [],
+            title: "Attention is all you need",
+            year: "2017",
+            container: "arXiv",
+            publisher: "",
+            place: "",
+            volume: "",
+            issue: "",
+            pages: "",
+            doi: "10.48550/arXiv.1706.03762",
+            url: "https://arxiv.org/abs/1706.03762",
+            isbn: "",
+            arxiv: "1706.03762",
+            pmid: "",
+          }
+        : null;
+    });
+    const found = await lookUp({ kind: "arxiv", id: "1706.03762" }, ["vaswani2017"]);
+    expect(found).toMatchObject({
+      key: "vaswani2017a",
+      type: "article",
+      container: "arXiv",
+      doi: "10.48550/arXiv.1706.03762",
+      arxiv: "1706.03762",
+    });
+    expect(await lookUp({ kind: "pubmed", id: "1" }, [])).toBeNull();
+    expect(asked).toEqual(["arxiv:1706.03762", "pubmed:1"]);
+    setWorkLookup(null);
+    await expect(lookUp({ kind: "doi", id: "10.1/x" }, [])).rejects.toThrow(/Sign in/);
   });
 });
 

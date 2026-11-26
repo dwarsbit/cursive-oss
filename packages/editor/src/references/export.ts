@@ -10,6 +10,10 @@ import type { Reference, ReferenceType } from "./reference";
 /** A reference with what an exported file can carry besides it. */
 export type ExportReference = Reference & {
   isbn?: string;
+  /** The arXiv ID, written as BibTeX's eprint. */
+  arxiv?: string;
+  /** The PubMed ID. */
+  pmid?: string;
   /** Tags, written as keywords. */
   keywords?: string[];
 };
@@ -187,6 +191,11 @@ function bibtexEntry(ref: ExportReference): string {
   add("pages", end ? `${latexEscape(start)}--${latexEscape(end)}` : latexEscape(start));
   add("isbn", latexEscape(ref.isbn ?? ""));
   add("doi", bibVerbatim(ref.doi));
+  if (ref.arxiv) {
+    add("eprint", latexEscape(ref.arxiv));
+    add("archiveprefix", "arXiv");
+  }
+  add("pmid", latexEscape(ref.pmid ?? ""));
   add("url", bibVerbatim(ref.url));
   add("keywords", latexEscape((ref.keywords ?? []).join(", ")));
   const type =
@@ -292,6 +301,7 @@ export function cslItem(ref: ExportReference): Record<string, unknown> {
   else add("issued", ref.year ? { literal: ref.year } : "");
   add("ISBN", ref.isbn ?? "");
   add("DOI", ref.doi);
+  add("PMID", ref.pmid ?? "");
   add("URL", ref.url);
   add("keyword", (ref.keywords ?? []).join(", "));
   return item;
