@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.1 (unreleased)
+## 0.4.1 (2026-11-26)
 
 - **Publish** puts your site on scholark.it, under your username: `scholark.it/@yourname/site-name`. Your first publish makes your username from your name; change it on your account page. `scholark.it/@yourname` lists all your sites.
 - Cursive's icon at the top left takes you back to your projects, as in Polemic and Binder: in the browser to your Scholarkit home page, in the desktop app to the list of projects. In the browser it replaces the **Scholarkit home** link.
