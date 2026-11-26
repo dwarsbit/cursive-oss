@@ -1,6 +1,6 @@
 import { fromBase64, toBase64 } from "./project-doc";
 import { t } from "@scholarkit/i18n";
-import type { LookedUpWork, LookupKind } from "../references/lookup";
+import type { LookedUpWork, LookupKind, PaperSearch } from "../references/lookup";
 
 /**
  * The Scholarkit server, as the apps use it: the account, the account's
@@ -158,7 +158,10 @@ export class AccountServer {
    * which asks Crossref, DataCite, Open Library or PubMed. Null when
    * there is no such work; signed in only.
    */
-  async lookUpWork(kind: LookupKind, id: string): Promise<LookedUpWork | null> {
+  async lookUpWork(
+    kind: LookupKind | "openalex",
+    id: string,
+  ): Promise<LookedUpWork | null> {
     const query = new URLSearchParams({ kind, id });
     try {
       const answer = await this.call<{ work: LookedUpWork }>(
@@ -191,6 +194,43 @@ export class AccountServer {
         );
       throw error;
     }
+  }
+
+  /**
+   * Papers whose title or authors match the words, from OpenAlex through
+   * the server. With Pro, or an OpenAlex key kept with the account. The
+   * error's code says why not: plus_needed, rate_limited, key_refused,
+   * key_budget_used.
+   */
+  async searchPapers(q: string): Promise<PaperSearch> {
+    try {
+      return await this.call<PaperSearch>(
+        "GET",
+        `/api/lookup/search?${new URLSearchParams({ q }).toString()}`,
+      );
+    } catch (error) {
+      if (error instanceof ServerError && error.status === 401)
+        throw new ServerError(
+          401,
+          error.code,
+          t("Sign in to your Scholarkit account to search for papers."),
+        );
+      throw error;
+    }
+  }
+
+  /** Whether the account keeps an OpenAlex key, and its last four characters. */
+  openAlexKey(): Promise<{ saved: boolean; ending: string | null }> {
+    return this.call("GET", "/api/account/openalex-key");
+  }
+
+  /** Keeps an OpenAlex key with the account, once OpenAlex takes it. */
+  saveOpenAlexKey(key: string): Promise<{ saved: boolean; ending: string | null }> {
+    return this.call("PUT", "/api/account/openalex-key", { json: { key } });
+  }
+
+  forgetOpenAlexKey(): Promise<{ saved: boolean; ending: string | null }> {
+    return this.call("DELETE", "/api/account/openalex-key");
   }
 
   /** The signed-in account, or null when nobody is signed in. */

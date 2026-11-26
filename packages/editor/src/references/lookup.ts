@@ -48,11 +48,30 @@ export interface LookedUpWork {
   pmid: string;
 }
 
+/**
+ * A paper a search found (`foundPaper` in @scholarkit/contracts): the
+ * work, OpenAlex's ID for it, and whether a free PDF of it is known.
+ */
+export type FoundPaper = LookedUpWork & {
+  openAlexId: string;
+  freePdf: boolean;
+  /** False when the search gave only the title, authors and DOI (Plus). */
+  detailed: boolean;
+};
+
+/** What a paper search answers: the papers, best first. */
+export interface PaperSearch {
+  works: FoundPaper[];
+}
+
 /** A work as a lookup found it: a reference, with the IDs a reference doesn't keep. */
 export type FoundWork = Reference & { isbn: string; arxiv: string; pmid: string };
 
 /** Asks the server for a work; null when there is none. */
-export type WorkLookup = (kind: LookupKind, id: string) => Promise<LookedUpWork | null>;
+export type WorkLookup = (
+  kind: LookupKind | "openalex",
+  id: string,
+) => Promise<LookedUpWork | null>;
 
 let workLookup: WorkLookup | null = null;
 
@@ -159,4 +178,18 @@ export async function lookUp(
     );
   const work = await workLookup(lookup.kind, lookup.id);
   return work ? foundWork(work, taken) : null;
+}
+
+/**
+ * A found paper with all its details: as the search gave them, or
+ * looked up by its OpenAlex ID when the search gave only its title,
+ * authors and DOI. The paper as found when that lookup fails.
+ */
+export async function paperDetails(paper: FoundPaper): Promise<LookedUpWork> {
+  if (paper.detailed || !paper.openAlexId || !workLookup) return paper;
+  try {
+    return (await workLookup("openalex", paper.openAlexId)) ?? paper;
+  } catch {
+    return paper;
+  }
 }
