@@ -156,7 +156,9 @@
   "Move “{name}” to the trash?": "“{name}” naar de prullenmand verplaatsen?",
   "The project's folder, with every page in it, moves to the trash on your computer. You can restore it from there until you empty the trash.": "De map van het project, met elke pagina erin, gaat naar de prullenmand op je computer. Je kunt hem daar terugzetten tot je de prullenmand leegt.",
   "Move to trash": "Naar prullenmand verplaatsen",
+  "Current": "Huidig",
   "Aa": "Aa",
+  "See plans": "Bekijk de abonnementen",
   "Publish this project": "Dit project publiceren",
   "Your pages become a site that anyone with the address can read. Publish again to bring the site up to date. Pages with a quiz or an assignment make it a tutorial: readers check their answers and track their progress.": "Je pagina’s worden een site die iedereen met het adres kan lezen. Publiceer opnieuw om de site bij te werken. Pagina’s met een quiz of inleveropdracht maken er een tutorial van: lezers controleren hun antwoorden en houden hun voortgang bij.",
   "Address": "Adres",
@@ -165,7 +167,9 @@
   "We made the username @{username} from your name. Your sites will be listed on {page}.": "We hebben de gebruikersnaam @{username} van je naam gemaakt. Je sites komen op {page} te staan.",
   "Change username": "Gebruikersnaam wijzigen",
   "Theme": "Thema",
+  "The site keeps the {theme} theme until you publish again. On Free, publishing again gives it the Cursive theme.": "De site houdt het thema {theme} tot je opnieuw publiceert. Met Free krijgt de site dan het thema Cursive.",
   "Publish again to give the site this theme.": "Publiceer opnieuw om de site dit thema te geven.",
+  "Plus and Pro have every theme.": "Plus en Pro hebben alle thema's.",
   "Published {day} · {count} pages": {
     "one": "Gepubliceerd {day} · {count} pagina",
     "other": "Gepubliceerd {day} · {count} pagina’s"

@@ -156,7 +156,9 @@
   "Move “{name}” to the trash?": "Move “{name}” to the trash?",
   "The project's folder, with every page in it, moves to the trash on your computer. You can restore it from there until you empty the trash.": "The project's folder, with every page in it, moves to the trash on your computer. You can restore it from there until you empty the trash.",
   "Move to trash": "Move to trash",
+  "Current": "Current",
   "Aa": "Aa",
+  "See plans": "See plans",
   "Publish this project": "Publish this project",
   "Your pages become a site that anyone with the address can read. Publish again to bring the site up to date. Pages with a quiz or an assignment make it a tutorial: readers check their answers and track their progress.": "Your pages become a site that anyone with the address can read. Publish again to bring the site up to date. Pages with a quiz or an assignment make it a tutorial: readers check their answers and track their progress.",
   "Address": "Address",
@@ -165,7 +167,9 @@
   "We made the username @{username} from your name. Your sites will be listed on {page}.": "We made the username @{username} from your name. Your sites will be listed on {page}.",
   "Change username": "Change username",
   "Theme": "Theme",
+  "The site keeps the {theme} theme until you publish again. On Free, publishing again gives it the Cursive theme.": "The site keeps the {theme} theme until you publish again. On Free, publishing again gives it the Cursive theme.",
   "Publish again to give the site this theme.": "Publish again to give the site this theme.",
+  "Plus and Pro have every theme.": "Plus and Pro have every theme.",
   "Published {day} · {count} pages": {
     "one": "Published {day} · {count} page",
     "other": "Published {day} · {count} pages"

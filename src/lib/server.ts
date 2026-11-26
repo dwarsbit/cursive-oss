@@ -43,6 +43,8 @@ export interface SiteState {
   baseUrl: string;
   /** The page that lists the owner's sites. */
   ownerPageUrl?: string;
+  /** The themes the owner's plan gives (a SiteTheme each). A server from before plan themes leaves it out: every theme. */
+  themes?: string[];
 }
 
 /** What a learner handed in for an assignment of a published tutorial. */

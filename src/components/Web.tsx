@@ -303,6 +303,7 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
           projectId={id}
           openUrl={openUrl}
           openAccount={() => openUrl("/account")}
+          openPlans={() => openUrl("/account#plan")}
           saveFile={browserSaveFile}
           onClose={() => setPublishing(false)}
         />

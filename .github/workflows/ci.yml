@@ -1,13 +1,12 @@
 name: CI
 
 # Scholarkit's Mirror workflow starts it after each commit it pushes here, to main or to a
-# scholarkit/<branch> (a push from a workflow starts no workflows by itself). Pull requests
-# here start it too.
+# scholarkit/<branch> (a push from a workflow starts no workflows by itself). Otherwise it runs
+# only by hand: pull requests here start nothing.
 on:
-  pull_request:
   workflow_dispatch:
 
-# A new push to a pull request or a scholarkit/ branch cancels its older
+# A new run on a scholarkit/ branch cancels its older
 # runs. Runs on main get a group of their own and always finish: a release
 # needs main green.
 concurrency:

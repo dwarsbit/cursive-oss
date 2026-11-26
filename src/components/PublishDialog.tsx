@@ -28,20 +28,30 @@ const day = (iso: string) =>
   });
 
 /** A theme in the picker: a small sample of its colors and type, then its name. */
+/**
+ * A theme in the picker: a small sample of its colors and type, then its name. A theme the
+ * owner's plan doesn't give is locked, with a Plus badge, or Current when the site still has it.
+ */
 function ThemeOption({
   theme,
   checked,
+  locked,
+  current,
   onPick,
 }: {
   theme: SiteThemeInfo;
   checked: boolean;
+  locked: boolean;
+  /** The published site has this theme. */
+  current: boolean;
   onPick: () => void;
 }) {
   return (
     <label
       className={cn(
-        "flex cursor-pointer flex-col gap-1.5 rounded-md border p-1.5 has-[:focus-visible]:border-ring",
-        checked ? "border-tint-edge bg-tint-soft" : "hover:bg-muted",
+        "relative flex flex-col gap-1.5 rounded-md border p-1.5 has-[:focus-visible]:border-ring",
+        locked ? "cursor-default" : "cursor-pointer",
+        checked ? "border-tint-edge bg-tint-soft" : !locked && "hover:bg-muted",
       )}
     >
       <input
@@ -49,11 +59,25 @@ function ThemeOption({
         name="site-theme"
         className="sr-only"
         checked={checked}
+        disabled={locked}
         onChange={onPick}
       />
+      {locked && (
+        <span
+          className={cn(
+            "absolute top-2.5 right-2.5 rounded-sm border bg-background px-1 text-[10px] leading-4 font-semibold",
+            current ? "text-foreground" : "border-tint-edge text-tint-foreground",
+          )}
+        >
+          {current ? t("Current") : "Plus"}
+        </span>
+      )}
       <span
         aria-hidden="true"
-        className="flex h-12 flex-col justify-between rounded-sm border p-1.5"
+        className={cn(
+          "flex h-12 flex-col justify-between rounded-sm border p-1.5",
+          locked && "opacity-45",
+        )}
         style={{ background: theme.ground, color: theme.ink }}
       >
         <span
@@ -77,13 +101,25 @@ function ThemeOption({
           />
         </span>
       </span>
-      <span className="px-0.5">
+      <span className={cn("px-0.5", locked && "opacity-45")}>
         <span className="block text-xs font-medium">{theme.name}</span>
         <span className="block text-[11px] leading-snug text-muted-foreground">
           {theme.hint}
         </span>
       </span>
     </label>
+  );
+}
+
+function PlansLink({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      className="font-medium text-foreground underline underline-offset-2"
+      onClick={onClick}
+    >
+      {t("See plans")}
+    </button>
   );
 }
 
@@ -98,6 +134,7 @@ export function PublishDialog({
   prepare,
   openUrl,
   openAccount,
+  openPlans,
   saveFile,
   onClose,
 }: {
@@ -107,6 +144,8 @@ export function PublishDialog({
   openUrl: (url: string) => void;
   /** Opens the account page, where the username is changed. */
   openAccount: () => void;
+  /** Opens the plans on the account page. */
+  openPlans: () => void;
   saveFile: SaveFile;
   onClose: () => void;
 }) {
@@ -124,7 +163,9 @@ export function PublishDialog({
         if (!current) return;
         setState(loaded);
         setSlug(loaded.site?.slug ?? loaded.suggestedSlug);
-        setTheme(siteThemeOf(loaded.site?.theme));
+        // A theme kept from an earlier plan can't be picked again: the next publish gives the default one.
+        const kept = siteThemeOf(loaded.site?.theme);
+        setTheme(!loaded.themes || loaded.themes.includes(kept) ? kept : "default");
       },
       (error: unknown) => current && setProblem(messageOf(error)),
     );
@@ -161,6 +202,12 @@ export function PublishDialog({
     });
 
   const site = state?.site ?? null;
+  const allowed = (id: SiteTheme) => !state?.themes || state.themes.includes(id);
+  const siteTheme = site ? siteThemeOf(site.theme) : null;
+  const keptName =
+    siteTheme && !allowed(siteTheme)
+      ? SITE_THEMES.find((option) => option.id === siteTheme)?.name
+      : undefined;
 
   if (learners) {
     return (
@@ -237,13 +284,31 @@ export function PublishDialog({
                   key={option.id}
                   theme={option}
                   checked={theme === option.id}
+                  locked={!allowed(option.id)}
+                  current={siteTheme === option.id}
                   onPick={() => setTheme(option.id)}
                 />
               ))}
             </div>
-            {site && siteThemeOf(site.theme) !== theme && (
+            {keptName ? (
               <p className="mt-1 text-xs text-muted-foreground">
-                {t("Publish again to give the site this theme.")}
+                {t(
+                  "The site keeps the {theme} theme until you publish again. On Free, publishing again gives it the Cursive theme.",
+                  { theme: keptName },
+                )}{" "}
+                <PlansLink onClick={openPlans} />
+              </p>
+            ) : (
+              site &&
+              siteTheme !== theme && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("Publish again to give the site this theme.")}
+                </p>
+              )
+            )}
+            {!keptName && SITE_THEMES.some((option) => !allowed(option.id)) && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("Plus and Pro have every theme.")} <PlansLink onClick={openPlans} />
               </p>
             )}
           </fieldset>

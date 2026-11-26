@@ -156,7 +156,9 @@
   "Move “{name}” to the trash?": "„{name}“ in den Papierkorb verschieben?",
   "The project's folder, with every page in it, moves to the trash on your computer. You can restore it from there until you empty the trash.": "Der Ordner des Projekts mit allen Seiten darin kommt in den Papierkorb auf deinem Computer. Du kannst ihn dort wiederherstellen, bis du den Papierkorb leerst.",
   "Move to trash": "In den Papierkorb verschieben",
+  "Current": "Aktuell",
   "Aa": "Aa",
+  "See plans": "Tarife ansehen",
   "Publish this project": "Dieses Projekt veröffentlichen",
   "Your pages become a site that anyone with the address can read. Publish again to bring the site up to date. Pages with a quiz or an assignment make it a tutorial: readers check their answers and track their progress.": "Deine Seiten werden zu einer Website, die alle mit der Adresse lesen können. Veröffentliche erneut, um die Website zu aktualisieren. Seiten mit einem Quiz oder einer Abgabe machen daraus ein Tutorial: Lesende prüfen ihre Antworten und verfolgen ihren Fortschritt.",
   "Address": "Adresse",
@@ -165,7 +167,9 @@
   "We made the username @{username} from your name. Your sites will be listed on {page}.": "Wir haben den Benutzernamen @{username} aus deinem Namen gemacht. Deine Websites stehen dann auf {page}.",
   "Change username": "Benutzernamen ändern",
   "Theme": "Design",
+  "The site keeps the {theme} theme until you publish again. On Free, publishing again gives it the Cursive theme.": "Die Website behält das Design {theme}, bis du erneut veröffentlichst. Mit Free bekommt sie dann das Design Cursive.",
   "Publish again to give the site this theme.": "Veröffentliche erneut, um der Website dieses Design zu geben.",
+  "Plus and Pro have every theme.": "Plus und Pro haben alle Designs.",
   "Published {day} · {count} pages": {
     "one": "Veröffentlicht {day} · {count} Seite",
     "other": "Veröffentlicht {day} · {count} Seiten"

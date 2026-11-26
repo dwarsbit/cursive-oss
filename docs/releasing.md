@@ -19,9 +19,11 @@ It releases the version of the `## X.Y.Z (unreleased)` heading in
    at the top of the changelog. Every pull request that changes, adds or
    fixes something adds its line there; start the heading if there is
    none yet.
-2. Once CI on Scholarkit's `main` is green, and CI on dwarsbit/cursive-oss's
-   `main` is green for the same files, run **Cursive release** from the
-   Actions tab of Scholarkit, on `main`. It takes no input.
+2. Run **CI** on Scholarkit's `main` from the Actions tab: it runs only
+   by hand. Once it is green, and CI on dwarsbit/cursive-oss's `main` is
+   green for the same files (the Mirror workflow starts it after a
+   merge), run **Cursive release** from the Actions tab of Scholarkit,
+   on `main`. It takes no input.
 
 **Cursive release** requires exactly one unreleased heading and a numeric
 version (Windows installers take no pre-releases). It sets the version in
@@ -58,7 +60,7 @@ error if that fails.
 
 The browser build is not part of a release: Scholarkit's **Cursive web
 image** workflow pushes it to `ghcr.io/dwarsbit/scholarkit-cursive-web`
-from every change on `main`, and the services serve that image at
+when you run it or Promote does, and the services serve that image at
 `/cursive`.
 
 The builds report errors to Sentry once the `SENTRY_DSN` variable is set in

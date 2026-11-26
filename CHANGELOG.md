@@ -13,6 +13,7 @@
 - The desktop app's **Notes**, **Presentation** and **Tutorial** choices are now **Blank**, **Lecture slides** and the new **Tutorial** template: one lesson with an explanation and a quiz.
 - Type `@arXiv:1706.03762` or `@PMID:31452104` to cite a preprint or an article by its arXiv or PubMed ID, as you can with a DOI or an ISBN.
 - Looking up a DOI, an ISBN, an arXiv or a PubMed ID now goes through your Scholarkit account, so it needs you to be signed in. Cursive no longer contacts Crossref, Open Library and the other sources itself.
+- Site themes come with Plus and Pro. On Free, **Publish** shows the other five themes with a Plus badge and publishes with the Cursive theme. A site published with another theme keeps it until you publish it again.
 
 ## 0.4.0 (2026-11-24)
 

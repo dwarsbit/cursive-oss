@@ -548,6 +548,11 @@ export function Desktop() {
               openUrl(`${url}/account`),
             )
           }
+          openPlans={() =>
+            void invoke<string>("account_server").then((url) =>
+              openUrl(`${url}/account#plan`),
+            )
+          }
           saveFile={desktopSaveFile}
           onClose={() => setDialog(null)}
         />
