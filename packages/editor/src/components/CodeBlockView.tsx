@@ -5,6 +5,7 @@ import {
 } from "@tiptap/react";
 import { useState } from "react";
 import { lowlight } from "../editor/extensions";
+import { Select } from "./Select";
 import { t } from "@scholarkit/i18n";
 
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -73,21 +74,19 @@ export function CodeBlockView({ node, updateAttributes }: ReactNodeViewProps) {
   return (
     <NodeViewWrapper className="code-block">
       <div className="code-bar" contentEditable={false}>
-        <select
+        <Select
           aria-label={t("Language")}
           value={language}
-          onChange={(event) =>
-            updateAttributes({ language: event.target.value || null })
-          }
-        >
-          <option value="">{t("Plain text")}</option>
-          {!known && language && <option value={language}>{language}</option>}
-          {LANGUAGES.filter((l) => l.id !== "plaintext").map((l) => (
-            <option key={l.id} value={l.id}>
-              {l.name}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: t("Plain text") },
+            ...(!known && language ? [{ value: language, label: language }] : []),
+            ...LANGUAGES.filter((l) => l.id !== "plaintext").map((l) => ({
+              value: l.id,
+              label: l.name,
+            })),
+          ]}
+          onChange={(value) => updateAttributes({ language: value || null })}
+        />
         <button type="button" onClick={copy}>
           {copied ? t("Copied") : t("Copy")}
         </button>

@@ -16,6 +16,7 @@ import {
   type Reference,
 } from "../references/reference";
 import { cn } from "../lib/cn";
+import { Select } from "./Select";
 import { t } from "@scholarkit/i18n";
 
 export function Runs({ runs }: { runs: Run[] }) {
@@ -166,19 +167,17 @@ export function BibliographyView({
       <div className="bib-head">
         <h2>{t("References")}</h2>
         {editable && setStyle ? (
-          <select
+          <Select
             className="bib-style"
             aria-label={t("Citation style")}
             title={t("Citation style")}
             value={style.id}
-            onChange={(event) => setStyle(event.target.value)}
-          >
-            {STYLES.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            options={STYLES.map((option) => ({
+              value: option.id,
+              label: option.label,
+            }))}
+            onChange={setStyle}
+          />
         ) : null}
         {editable && linked && (
           <button

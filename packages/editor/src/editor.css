@@ -459,7 +459,7 @@
   color: var(--muted-foreground);
   user-select: none;
 }
-.doc .code-bar select,
+.doc .code-bar .select-trigger,
 .doc .code-bar button {
   border: 0;
   border-radius: 4px;
@@ -476,7 +476,7 @@
 .doc .code-bar button:focus-visible {
   opacity: 1;
 }
-.doc .code-bar select:hover,
+.doc .code-bar .select-trigger:hover,
 .doc .code-bar button:hover {
   background: var(--accent);
 }

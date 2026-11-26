@@ -7,6 +7,7 @@ import {
   PRIMARY_BUTTON,
   QUIET_BUTTON,
 } from "@scholarkit/editor/components/Dialog";
+import { Select } from "@scholarkit/editor/components/Select";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Face } from "./Face";
 import type { Account, People, Server, ServerProject, ShareRole } from "@/lib/server";
@@ -45,19 +46,14 @@ function RoleSelect({
   onChange: (role: ShareRole) => void;
 }) {
   return (
-    <select
+    <Select<ShareRole>
       className={`${SELECT} ${className ?? ""}`}
       value={value === "commenter" ? "viewer" : value}
       aria-label={label}
       disabled={disabled}
-      onChange={(event) => onChange(event.target.value as ShareRole)}
-    >
-      {ROLES.map(({ role, label }) => (
-        <option key={role} value={role}>
-          {label}
-        </option>
-      ))}
-    </select>
+      options={ROLES.map(({ role, label }) => ({ value: role, label }))}
+      onChange={onChange}
+    />
   );
 }
 

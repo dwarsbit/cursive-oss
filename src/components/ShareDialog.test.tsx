@@ -62,6 +62,19 @@ const button = (label: string) =>
     (b) => b.textContent === label || b.getAttribute("aria-label") === label,
   )!;
 
+/** Opens a dropdown by its label and picks an option by its text. */
+const choose = async (label: string, option: string) => {
+  await act(async () =>
+    host!
+      .querySelector<HTMLButtonElement>(`[role="combobox"][aria-label="${label}"]`)!
+      .click(),
+  );
+  const pick = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+    (o) => o.textContent === option,
+  )!;
+  await act(async () => pick.click());
+};
+
 afterEach(() => {
   act(() => root?.unmount());
   host?.remove();
@@ -96,9 +109,6 @@ describe("ShareDialog", () => {
     expect(text()).toContain("sara@example.edu");
 
     const email = host!.querySelector<HTMLInputElement>('input[type="email"]')!;
-    const role = host!.querySelector<HTMLSelectElement>(
-      'select[aria-label="Role of the person you invite"]',
-    )!;
     await act(async () => {
       // React reads the value through the input's own setter.
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(
@@ -106,21 +116,14 @@ describe("ShareDialog", () => {
         "Anna@Example.edu",
       );
       email.dispatchEvent(new Event("input", { bubbles: true }));
-      role.value = "viewer";
-      role.dispatchEvent(new Event("change", { bubbles: true }));
     });
+    await choose("Role of the person you invite", "Can read");
     await act(async () => button("Invite").click());
     expect(server.invite).toHaveBeenCalledWith("p1", "Anna@Example.edu", "viewer");
     expect(text()).toContain("Invite sent to anna@example.edu.");
     expect(text()).toContain("Invited · can read");
 
-    const saraRole = host!.querySelector<HTMLSelectElement>(
-      `select[aria-label="Sara Okafor's role"]`,
-    )!;
-    await act(async () => {
-      saraRole.value = "viewer";
-      saraRole.dispatchEvent(new Event("change", { bubbles: true }));
-    });
+    await choose("Sara Okafor's role", "Can read");
     expect(server.setRole).toHaveBeenCalledWith("p1", sara.id, "viewer");
 
     await act(async () => button("Remove Sara Okafor").click());
@@ -160,7 +163,7 @@ describe("ShareDialog", () => {
     expect(text()).toContain("Anna Berg");
     expect(text()).toContain("Can read");
     expect(host!.querySelector('input[type="email"]')).toBeNull();
-    expect(host!.querySelector("select")).toBeNull();
+    expect(host!.querySelector('[role="combobox"]')).toBeNull();
 
     await act(async () => button("Leave project").click());
     expect(text()).toContain("Leave “Research notes”?");

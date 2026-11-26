@@ -18,6 +18,7 @@
     "./components/FootnotePopover": "./src/components/FootnotePopover.tsx",
     "./components/Footnotes": "./src/components/Footnotes.tsx",
     "./components/MarkdownEditor": "./src/components/MarkdownEditor.tsx",
+    "./components/Select": "./src/components/Select.tsx",
     "./components/StartPage": "./src/components/StartPage.tsx",
     "./components/MathPopover": "./src/components/MathPopover.tsx",
     "./components/MediaViews": "./src/components/MediaViews.tsx",

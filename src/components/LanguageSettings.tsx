@@ -8,6 +8,7 @@ import {
   t,
 } from "@scholarkit/i18n";
 import { languageCodes, switchLanguage } from "@/lib/languages";
+import { Select } from "@scholarkit/editor/components/Select";
 
 const FIELD =
   "mt-2 h-7 w-full rounded-md border bg-background px-2 text-xs outline-none focus:border-tint-edge";
@@ -48,19 +49,20 @@ export function LanguageSettings() {
           "Menus, buttons and messages. Your pages keep their own language. Cursive reloads to switch.",
         )}
       </p>
-      <select
+      <Select
         id="interface-language"
         className={FIELD}
         value={value}
-        onChange={(event) => choose(event.target.value)}
-      >
-        <option value={SYSTEM}>{t("System ({language})", { language: system })}</option>
-        {languageCodes.map((code) => (
-          <option key={code} value={code} lang={code}>
-            {nameOf(code)}
-          </option>
-        ))}
-      </select>
+        options={[
+          { value: SYSTEM, label: t("System ({language})", { language: system }) },
+          ...languageCodes.map((code) => ({
+            value: code,
+            label: nameOf(code),
+            lang: code,
+          })),
+        ]}
+        onChange={choose}
+      />
       {problem && <p className="mt-2 text-xs text-destructive">{problem}</p>}
     </section>
   );

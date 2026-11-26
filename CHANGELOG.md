@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2 (unreleased)
+
+- Dropdowns open Cursive's own list instead of your system's, in the same style as the rest of Cursive: a code block's language, the citation style of your references, a person's role in **Share** and the interface language in **Settings**.
+
 ## 0.4.1 (2026-11-26)
 
 - Type `@` and a few words of a title, or an author's name, to cite a paper from OpenAlex's 480 million works. It comes with Plus and Pro and needs your Scholarkit account: Plus finds titles and authors and looks up the rest when you cite, Pro shows each paper's year and journal as you choose.
