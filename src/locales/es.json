@@ -6,15 +6,15 @@
   "The page is moved to the trash on your computer.": "La página se mueve a la papelera de tu ordenador.",
   "The folder is moved to the trash on your computer.": "La carpeta se mueve a la papelera de tu ordenador.",
   "The folder and the {count} pages in it are moved to the trash on your computer.": {
-    "many": "La carpeta y las {count} páginas que contiene se mueven a la papelera de tu ordenador.",
     "one": "La carpeta y la página que contiene se mueven a la papelera de tu ordenador.",
+    "many": "La carpeta y las {count} páginas que contiene se mueven a la papelera de tu ordenador.",
     "other": "La carpeta y las {count} páginas que contiene se mueven a la papelera de tu ordenador."
   },
   "The page is removed from this project. You can't undo this.": "La página se quita de este proyecto. Esto no se puede deshacer.",
   "The folder is removed from this project. You can't undo this.": "La carpeta se quita de este proyecto. Esto no se puede deshacer.",
   "The folder and the {count} pages in it are removed from this project. You can't undo this.": {
-    "many": "La carpeta y las {count} páginas que contiene se quitan de este proyecto. Esto no se puede deshacer.",
     "one": "La carpeta y la página que contiene se quitan de este proyecto. Esto no se puede deshacer.",
+    "many": "La carpeta y las {count} páginas que contiene se quitan de este proyecto. Esto no se puede deshacer.",
     "other": "La carpeta y las {count} páginas que contiene se quitan de este proyecto. Esto no se puede deshacer."
   },
   "Saved": "Guardado",
@@ -43,8 +43,8 @@
   "Not saved. {problem}": "No guardado. {problem}",
   "Slide {number} of {total}": "Diapositiva {number} de {total}",
   "{count} words": {
-    "many": "{count} palabras",
     "one": "{count} palabra",
+    "many": "{count} palabras",
     "other": "{count} palabras"
   },
   "Delete “{label}”?": "¿Eliminar «{label}»?",
@@ -136,8 +136,8 @@
   "Checking…": "Comprobando…",
   "Check the connection": "",
   "Connected. {count} models to choose from.": {
-    "many": "",
     "one": "",
+    "many": "",
     "other": ""
   },
   "{name} didn't answer. Is it running?": "",
@@ -170,8 +170,8 @@
   "Cursive keeps one while you write, each hour.": "Cursive guarda una mientras escribes, cada hora.",
   "Cursive keeps one while you write, at most every 10 minutes.": "Cursive guarda una mientras escribes, como mucho cada 10 minutos.",
   "{count} lines differ": {
-    "many": "{count} líneas son distintas",
     "one": "{count} línea es distinta",
+    "many": "{count} líneas son distintas",
     "other": "{count} líneas son distintas"
   },
   "Show": "Mostrar",
@@ -181,8 +181,8 @@
   "Goes away": "Desaparece",
   "Snapshot": "Instantánea",
   "{count} unchanged lines": {
-    "many": "{count} líneas sin cambios",
     "one": "{count} línea sin cambios",
+    "many": "{count} líneas sin cambios",
     "other": "{count} líneas sin cambios"
   },
   "Comes back:": "Vuelve:",
@@ -212,18 +212,18 @@
   "Readers who signed in to your published tutorial. Readers who don’t sign in keep their progress in their own browser and are not listed.": "Lectores que han iniciado sesión en tu tutorial publicado. Los lectores que no inician sesión guardan su progreso en su propio navegador y no aparecen aquí.",
   "Nobody has signed in yet.": "Aún no ha iniciado sesión nadie.",
   "{done} of {count} pages": {
-    "many": "{done} de {count} páginas",
     "one": "{done} de {count} página",
+    "many": "{done} de {count} páginas",
     "other": "{done} de {count} páginas"
   },
   "{scored} of {count} points": {
-    "many": "{scored} de {count} puntos",
     "one": "{scored} de {count} punto",
+    "many": "{scored} de {count} puntos",
     "other": "{scored} de {count} puntos"
   },
   "{count} assignments": {
-    "many": "{count} tareas",
     "one": "{count} tarea",
+    "many": "{count} tareas",
     "other": "{count} tareas"
   },
   "No work handed in. Last active {day}.": "No ha entregado ningún trabajo. Última actividad {day}.",
@@ -260,8 +260,8 @@
   "Publish again to give the site this theme.": "Vuelve a publicar para dar este tema al sitio.",
   "Plus and Pro have every theme.": "Plus y Pro tienen todos los temas.",
   "Published {day} · {count} pages": {
-    "many": "Publicado {day} · {count} páginas",
     "one": "Publicado {day} · {count} página",
+    "many": "Publicado {day} · {count} páginas",
     "other": "Publicado {day} · {count} páginas"
   },
   "Unpublish": "Retirar publicación",
@@ -273,8 +273,8 @@
   "No pages match “{query}”": "Ninguna página coincide con «{query}»",
   "Search the titles and text of every page.": "Busca en los títulos y el texto de todas las páginas.",
   "{count} matches": {
-    "many": "{count} coincidencias",
     "one": "{count} coincidencia",
+    "many": "{count} coincidencias",
     "other": "{count} coincidencias"
   },
   "↑↓ to choose, ↵ to open": "↑↓ para elegir, ↵ para abrir",
@@ -293,8 +293,8 @@
   "Replace with": "Reemplazar por",
   "Replace all": "Reemplazar todo",
   "Replaced {count} matches": {
-    "many": "Se han reemplazado {count} coincidencias",
     "one": "Se ha reemplazado {count} coincidencia",
+    "many": "Se han reemplazado {count} coincidencias",
     "other": "Se han reemplazado {count} coincidencias"
   },
   "Only the desktop app can reach the Zotero app.": "Solo la aplicación de escritorio puede acceder a la aplicación Zotero.",
@@ -337,8 +337,8 @@
   "User ID": "ID de usuario",
   "Save": "Guardar",
   "{count} works": {
-    "many": "{count} obras",
     "one": "{count} obra",
+    "many": "{count} obras",
     "other": "{count} obras"
   },
   "Add a BibTeX file": "Añadir un archivo BibTeX",
@@ -421,19 +421,19 @@
   "One file that opens in any browser, with the images inside it.": "Un archivo que se abre en cualquier navegador, con las imágenes dentro.",
   "A Common Cartridge file to import in Canvas, Moodle or Brightspace. Pages become pages, and questions become quizzes the platform grades.": "Un archivo Common Cartridge para importar en Canvas, Moodle o Brightspace. Las páginas se convierten en páginas, y las preguntas en cuestionarios que la plataforma califica.",
   "{count} pages": {
-    "many": "{count} páginas",
     "one": "{count} página",
+    "many": "{count} páginas",
     "other": "{count} páginas"
   },
   "{count} questions, in quizzes the platform grades": {
-    "many": "{count} preguntas, en cuestionarios que la plataforma califica",
     "one": "{count} pregunta, en un cuestionario que la plataforma califica",
+    "many": "{count} preguntas, en cuestionarios que la plataforma califica",
     "other": "{count} preguntas, en cuestionarios que la plataforma califica"
   },
   "No questions yet. Quizzes, blanks with one gap and exercises become questions.": "Aún no hay preguntas. Los cuestionarios, los huecos con un solo hueco y los ejercicios se convierten en preguntas.",
   "{count} blocks stay on their page: put in order, several blanks or assignments": {
-    "many": "{count} bloques se quedan en su página: ordenar, varios huecos o tareas",
     "one": "{count} bloque se queda en su página: ordenar, varios huecos o una tarea",
+    "many": "{count} bloques se quedan en su página: ordenar, varios huecos o tareas",
     "other": "{count} bloques se quedan en su página: ordenar, varios huecos o tareas"
   },
   "What comes along": "Qué se incluye",
@@ -600,8 +600,8 @@
   "↑↓ to choose, ↵ to link": "↑↓ para elegir, ↵ para enlazar",
   "Linked from": "Enlazada desde",
   "Linked from {count} pages": {
-    "many": "Enlazada desde {count} páginas",
     "one": "Enlazada desde {count} página",
+    "many": "Enlazada desde {count} páginas",
     "other": "Enlazada desde {count} páginas"
   },
   "Text": "Texto",
@@ -668,16 +668,16 @@
   "Learning goals": "Objetivos de aprendizaje",
   "What a learner can do after this page": "Lo que un estudiante sabe hacer después de esta página",
   "{count} goals": {
-    "many": "{count} objetivos",
     "one": "{count} objetivo",
+    "many": "{count} objetivos",
     "other": "{count} objetivos"
   },
   "Goal {number}": "Objetivo {number}",
   "Key terms": "Términos clave",
   "The published page also explains them where its text uses them": "La página publicada también los explica donde su texto los usa",
   "{count} terms": {
-    "many": "{count} términos",
     "one": "{count} término",
+    "many": "{count} términos",
     "other": "{count} términos"
   },
   "Term": "Término",
@@ -701,8 +701,8 @@
   "Fill in the blanks": "Rellenar los huecos",
   "Learners type the missing words": "Los estudiantes escriben las palabras que faltan",
   "{count} blanks": {
-    "many": "{count} huecos",
     "one": "{count} hueco",
+    "many": "{count} huecos",
     "other": "{count} huecos"
   },
   "A question that pushes toward one answer is called a {{leading}} question.": "Una pregunta que empuja hacia una respuesta se llama pregunta {{sugestiva}}.",
@@ -713,8 +713,8 @@
   "Put in order": "Ordenar",
   "Write the items in the correct order. Learners get them shuffled.": "Escribe los elementos en el orden correcto. Los estudiantes los reciben desordenados.",
   "{count} items": {
-    "many": "{count} elementos",
     "one": "{count} elemento",
+    "many": "{count} elementos",
     "other": "{count} elementos"
   },
   "Question, such as: Put the steps of a pilot in order": "Pregunta, como: Ordena los pasos de un estudio piloto",
@@ -729,8 +729,8 @@
   "Flashcards": "Tarjetas",
   "Learners click a card to turn it": "Los estudiantes hacen clic en una tarjeta para darle la vuelta",
   "{count} cards": {
-    "many": "{count} tarjetas",
     "one": "{count} tarjeta",
+    "many": "{count} tarjetas",
     "other": "{count} tarjetas"
   },
   "Front": "Anverso",
@@ -738,8 +738,8 @@
   "Back": "Reverso",
   "Back of card {number}": "Reverso de la tarjeta {number}",
   "{count} points": {
-    "many": "{count} puntos",
     "one": "{count} punto",
+    "many": "{count} puntos",
     "other": "{count} puntos"
   },
   "Quiz": "Cuestionario",
@@ -877,8 +877,8 @@
   "More from midnight UTC": "Más a partir de medianoche UTC",
   "Unlimited review links": "Enlaces de revisión ilimitados",
   "{active} of {count} active review links": {
-    "many": "{active} de {count} enlaces de revisión activos",
     "one": "{active} de {count} enlace de revisión activo",
+    "many": "{active} de {count} enlaces de revisión activos",
     "other": "{active} de {count} enlaces de revisión activos"
   },
   "Scholarkit account": "Cuenta de Scholarkit",
@@ -896,8 +896,8 @@
   "Live with {name}": "En directo con {name}",
   "Live with {first} and {second}": "En directo con {first} y {second}",
   "Live with {first}, {second} and {count} others": {
-    "many": "En directo con {first}, {second} y {count} personas más",
     "one": "En directo con {first}, {second} y {count} persona más",
+    "many": "En directo con {first}, {second} y {count} personas más",
     "other": "En directo con {first}, {second} y {count} personas más"
   },
   "Reconnecting…": "Reconectando…",
@@ -925,8 +925,8 @@
   "Ask the assistant ({shortcut})": "",
   "Thinking…": "",
   "{count} steps": {
-    "many": "",
     "one": "",
+    "many": "",
     "other": ""
   },
   "Stopped.": "",
