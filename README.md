@@ -211,7 +211,7 @@ the next update.
 
 ### Requirements
 
-- Node.js 22 or later and pnpm
+- Node.js 26 or later and pnpm
 - Rust (stable) with cargo and the
   [Tauri prerequisites](https://tauri.app/start/prerequisites/), for the
   desktop app
