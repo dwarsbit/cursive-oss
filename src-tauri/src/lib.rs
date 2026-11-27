@@ -1,4 +1,6 @@
 mod account;
+mod assistant;
+mod assistant_server;
 mod crash;
 mod export;
 mod files;
@@ -25,6 +27,7 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .manage(export::LastExport::default())
+        .manage(assistant::Requests::default())
         .setup(|app| {
             crash::install(app.handle());
             Ok(())
@@ -56,6 +59,13 @@ pub fn run() {
             account::open_in_browser,
             account::server_request,
             account::server_download,
+            assistant::assistant_key_exists,
+            assistant::assistant_key_set,
+            assistant::assistant_key_delete,
+            assistant::assistant_models,
+            assistant::assistant_chat,
+            assistant::assistant_cancel,
+            assistant_server::assistant_turn,
             link::link_load,
             link::link_save,
             link::link_remove,

@@ -18,6 +18,7 @@ COPY packages/updates/package.json packages/updates/
 COPY packages/account-menu/package.json packages/account-menu/
 COPY packages/monitoring/package.json packages/monitoring/
 COPY packages/collab/package.json packages/collab/
+COPY packages/assistant/package.json packages/assistant/
 COPY apps/cursive/package.json apps/cursive/
 RUN pnpm install --frozen-lockfile --ignore-scripts --filter @scholarkit/cursive...
 COPY packages/editor packages/editor
@@ -26,6 +27,7 @@ COPY packages/updates packages/updates
 COPY packages/account-menu packages/account-menu
 COPY packages/monitoring packages/monitoring
 COPY packages/collab packages/collab
+COPY packages/assistant packages/assistant
 COPY apps/cursive apps/cursive
 # Error reports (src/lib/monitoring.ts); without it the build sends none.
 ARG VITE_SENTRY_DSN=""

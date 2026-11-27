@@ -155,6 +155,7 @@ export function Editor({
   remote,
   others,
   onSelection,
+  onAsk,
 }: {
   /**
    * The page when the editor opens; later edits live in the editor. When
@@ -182,6 +183,8 @@ export function Editor({
   others?: RemoteCaret[];
   /** Called when your caret or selection moves, for others to see. */
   onSelection?: (selection: { anchor: number; head: number }) => void;
+  /** Asks the app's assistant about the selection: an Ask button in its toolbar. */
+  onAsk?: (editor: TiptapEditor) => void;
 }) {
   const [math, setMath] = useState<MathTarget | null>(null);
   const [note, setNote] = useState<number | null>(null);
@@ -483,7 +486,11 @@ export function Editor({
         {picker}
         <EditorContent editor={editor} />
         <Footnotes editor={editor} onOpen={setNote} />
-        <SelectionToolbar editor={editor} appendTo={() => document.body} />
+        <SelectionToolbar
+          editor={editor}
+          appendTo={() => document.body}
+          onAsk={onAsk}
+        />
         {createPortal(menus, document.body)}
       </>
     );
@@ -524,7 +531,7 @@ export function Editor({
           <div className="block-drop-line" style={dropLine} />,
           document.body,
         )}
-      <SelectionToolbar editor={editor} />
+      <SelectionToolbar editor={editor} onAsk={onAsk} />
       {menus}
     </>
   );

@@ -38,6 +38,7 @@ import {
 } from "@scholarkit/editor/components/Dialog";
 import { t, tn } from "@scholarkit/i18n";
 import { LanguageSettings } from "./LanguageSettings";
+import { AssistantSettings } from "./AssistantSettings";
 import { ErrorReportSettings } from "./ErrorReportSettings";
 import { reportsBuiltIn } from "@/lib/monitoring";
 
@@ -672,12 +673,22 @@ function BibFiles() {
   );
 }
 
-/** The app's settings: where citations come from, and updates in the desktop app. */
-export function SettingsDialog({ onClose }: { onClose: () => void }) {
+/** The app's settings: the assistant, where citations come from, and updates in the desktop app. */
+export function SettingsDialog({
+  onClose,
+  account = false,
+}: {
+  onClose: () => void;
+  /** Whether a Scholarkit account is signed in: the assistant's own model needs one. */
+  account?: boolean;
+}) {
   return (
     <Dialog title={t("Settings")} onClose={onClose}>
       <div className="settings mt-3">
         <LanguageSettings />
+        <div className="mb-5">
+          <AssistantSettings account={account} />
+        </div>
         <h2 className="mb-2 text-xs font-medium text-muted-foreground">
           {t("References")}
         </h2>

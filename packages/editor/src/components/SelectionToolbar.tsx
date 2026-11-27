@@ -8,6 +8,7 @@ import {
   Code,
   Highlighter,
   Link,
+  Sparkles,
   Superscript,
   Unlink,
 } from "lucide-react";
@@ -61,10 +62,13 @@ export function normalizeHref(input: string): string {
 export function SelectionToolbar({
   editor,
   appendTo,
+  onAsk,
 }: {
   editor: Editor;
   /** Where the toolbar is put in the document; next to the page when left out. */
   appendTo?: () => HTMLElement;
+  /** Asks the app's assistant about the selection: an Ask button at the end. */
+  onAsk?: (editor: Editor) => void;
 }) {
   const [panel, setPanel] = useState<"none" | "turn" | "link">("none");
   const [href, setHref] = useState("");
@@ -211,6 +215,19 @@ export function SelectionToolbar({
             >
               <Superscript className="size-3.5" />
             </ToolButton>
+            {onAsk && (
+              <>
+                <Divider />
+                <button
+                  type="button"
+                  className="flex h-7 items-center gap-1 rounded-[5px] px-2 text-[13px] font-medium text-tint-foreground hover:bg-accent"
+                  onClick={() => onAsk(editor)}
+                >
+                  <Sparkles className="size-3.5" aria-hidden />
+                  {t("Ask")}
+                </button>
+              </>
+            )}
           </>
         )}
         {panel === "turn" && (

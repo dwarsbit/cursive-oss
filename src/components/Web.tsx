@@ -21,6 +21,7 @@ import { serverStore } from "@/lib/server-store";
 import { templatePages } from "@/templates";
 import { Mark } from "./Mark";
 import { AccountMenu } from "./AccountMenu";
+import { serverTurn } from "@scholarkit/assistant";
 import { AppLoading, HomeMark } from "@scholarkit/editor/components/AppShell";
 import { webAddresses } from "@/lib/web-address";
 import { BLANK, StartTemplates } from "./StartTemplates";
@@ -38,6 +39,9 @@ const server = new Server(browserTransport);
 
 /** The account's usage for the account menu. */
 const loadUsage = () => server.usage();
+
+/** The assistant on our model, through the account's session. */
+const ASSISTANT = { turn: serverTurn({ app: "cursive" }), usage: loadUsage };
 
 /** The app's addresses: a new project at /cursive/projects, one project at /cursive/projects/<id>. */
 const ADDRESS = webAddresses(import.meta.env.BASE_URL);
@@ -260,7 +264,8 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
         }
         status={status}
         presence={presence}
-        actions={
+        assistant={ASSISTANT}
+        actions={(ask) =>
           info && (
             <>
               <button
@@ -281,6 +286,7 @@ function OpenProject({ id, account }: { id: string; account: Account }) {
                   {t("Publish")}
                 </button>
               )}
+              {ask}
               {accountMenu(account)}
             </>
           )

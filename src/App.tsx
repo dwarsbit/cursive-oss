@@ -1,5 +1,5 @@
 import { History, PanelLeft, Play } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Mark } from "@/components/Mark";
 import { AppLoading } from "@scholarkit/editor/components/AppShell";
@@ -87,6 +87,41 @@ import { Presenter } from "@/slides/Presenter";
 import { SlideStage } from "@/slides/SlideStage";
 import { useDeck } from "@/slides/use-deck";
 import { formatNumber, t, tn } from "@scholarkit/i18n";
+import type { SendTurn } from "@scholarkit/assistant";
+import type { Usage } from "@scholarkit/editor/lib/account";
+import { addReference } from "@scholarkit/editor/components/CiteMenu";
+import {
+  foundWork,
+  lookUp,
+  paperDetails,
+  paperSearch,
+  type FoundPaper,
+} from "@scholarkit/editor/references/lookup";
+import { pageReferences } from "@scholarkit/editor/references/reference";
+import {
+  AskAssistantButton,
+  AssistantDock,
+  AssistantFloatingLayer,
+  AssistantMenuLayer,
+  sourceInfo,
+  type AssistantProps,
+  type ReadSelection,
+} from "@/components/Assistant";
+import {
+  CursiveChat,
+  useChat,
+  type ChatHost,
+  type Selection,
+} from "@/lib/assistant/chat";
+import {
+  assistantSnapshot,
+  ownReady,
+  saveAssistant,
+  sourceOf,
+  subscribeAssistant,
+} from "@/lib/assistant/providers";
+import { ownTurn } from "@/lib/assistant/transport";
+import { replaceIn } from "@/lib/assistant/tools";
 
 const MODES: Array<{ id: Mode; label: string; hint: string }> = [
   { id: "visual", label: t("Visual"), hint: t("The page as blocks") },
@@ -157,6 +192,7 @@ export default function App({
   actions,
   status,
   presence,
+  assistant,
 }: {
   store: ProjectStore;
   /** The page a new visitor sees first. */
@@ -168,11 +204,17 @@ export default function App({
   homeHref?: string;
   /** Gives the project another name, where the app can. Rejects with why not. */
   onRenameProject?: (name: string) => Promise<void>;
-  /** Buttons at the end of the header: the account, publishing. */
-  actions?: React.ReactNode;
+  /**
+   * Buttons at the end of the header: the account, publishing. A
+   * function puts the assistant's Ask button among them, next to the
+   * account; otherwise it goes before them.
+   */
+  actions?: React.ReactNode | ((ask: React.ReactNode) => React.ReactNode);
   status?: Status;
   /** Who else has the project open, where the project lives in the account. */
   presence?: ProjectPresence;
+  /** The assistant on our model, and the month's use of it: there with an account. */
+  assistant?: { turn: SendTurn; usage: () => Promise<Usage | null> };
 }) {
   const [project, setProject] = useState<Project | null>(null);
   // The project as of the last change, also before the screen shows it:
@@ -864,6 +906,144 @@ export default function App({
     [pageList, index, active, fileSet, filesVersion, fileUrl, store],
   );
 
+  // ---------- the assistant ----------
+  const assistantSettings = useSyncExternalStore(subscribeAssistant, assistantSnapshot);
+  const signedIn = Boolean(assistant);
+  const ours = sourceOf(assistantSettings, signedIn) === "scholarkit";
+  const [chat] = useState(
+    () => new CursiveChat({ papers: signedIn, lookUp: signedIn }),
+  );
+  const chatState = useChat(chat);
+
+  /** Changes a page's Markdown, also the one open now, as a change from elsewhere would. */
+  const changePage = (path: string, change: (markdown: string) => string) => {
+    const latest = fresh.current;
+    const source = latest?.pages[path];
+    if (!latest || source === undefined) throw new Error(t("The page is gone."));
+    const page = readPage(source);
+    const markdown = change(page.markdown);
+    const file = writePage({ ...page, markdown });
+    if (file === source) return;
+    commit({ ...latest, pages: { ...latest.pages, [path]: file } });
+    void persist(store.writePage(path, file));
+    if (path !== active) return;
+    if (mode === "visual" && pageEditor.current && !isDeck)
+      mergeMarkdown(pageEditor.current, markdown);
+    setRemote((n) => n + 1);
+  };
+
+  /** Cites a paper in the open page: after the selection the question was about, or at the caret. */
+  const citePaper = async (paper: FoundPaper, selection: Selection | null) => {
+    const editor = pageEditor.current;
+    if (mode !== "visual" || isDeck || !editor || editor.isDestroyed)
+      throw new Error(t("Open the page in Visual to cite in it."));
+    const refs = pageReferences(page?.markdown ?? "");
+    const details = await paperDetails(paper);
+    const doi = details.doi.toLowerCase();
+    const ref =
+      (doi && refs.find((other) => other.doi.toLowerCase() === doi)) ||
+      foundWork(
+        details,
+        refs.map((other) => other.key),
+      );
+    const size = editor.state.doc.content.size;
+    let at = Math.min(
+      selection && selection.path === active ? selection.to : editor.state.selection.to,
+      size - 1,
+    );
+    const doc = editor.state.doc;
+    // Before the full stop that ends the claim, as citations go.
+    if (at > 1 && /[.,;:!?]/.test(doc.textBetween(at - 1, at))) at -= 1;
+    const before = at > 1 ? doc.textBetween(at - 1, at) : " ";
+    editor
+      .chain()
+      .insertContentAt(at, [
+        ...(/\s/.test(before) ? [] : [{ type: "text", text: " " }]),
+        { type: "citation", attrs: { items: [{ key: ref.key, locator: "" }] } },
+      ])
+      .run();
+    addReference(editor, ref);
+  };
+
+  const host: ChatHost = {
+    pages: () => fresh.current?.pages ?? {},
+    searchPapers: (q) => {
+      const search = paperSearch();
+      if (!search)
+        throw new Error(t("Sign in to your Scholarkit account to find papers."));
+      return search.search(q);
+    },
+    lookUp: (kind, id) => lookUp({ kind, id }, []),
+    send: () =>
+      ours
+        ? (assistant?.turn ?? null)
+        : ownReady(assistantSettings)
+          ? ownTurn(assistantSettings)
+          : null,
+    ours: () => ours,
+    openPage: () =>
+      active && page
+        ? { path: active, title: page.title.trim() || t("Untitled") }
+        : null,
+    applyEdit: async (card) =>
+      changePage(card.path, (markdown) =>
+        markdown === card.before ? card.after : replaceIn(markdown, card.replacements),
+      ),
+    fixReference: async (card) =>
+      changePage(card.path, (markdown) => {
+        const fixed = addToFence(markdown, card.fixed);
+        if (fixed === null) throw new Error(t("This page has no reference list."));
+        return fixed;
+      }),
+    cite: citePaper,
+    usage: assistant?.usage,
+  };
+  // The tools reach the project as it is now.
+  useEffect(() => {
+    chat.setHost(host);
+  });
+
+  /** The selection in the open page, with where the Ask menu goes; null without one. */
+  const readSelection: ReadSelection = () => {
+    const editor = pageEditor.current;
+    if (!active || mode !== "visual" || isDeck || !editor || editor.isDestroyed)
+      return null;
+    const { from, to, empty } = editor.state.selection;
+    if (empty) return null;
+    const text = editor.state.doc.textBetween(from, to, "\n").trim();
+    if (text.length < 2) return null;
+    const end = editor.view.coordsAtPos(to);
+    return {
+      selection: { path: active, text, from, to },
+      anchor: { left: end.left, top: end.bottom + 8 },
+    };
+  };
+  const askAbout = () => {
+    const selected = readSelection();
+    if (selected) chat.openMenu(selected.selection, selected.anchor);
+  };
+
+  const docked = assistantSettings.layout === "docked";
+  const assistantProps: AssistantProps = {
+    chat,
+    openPage: active && page ? { path: active, title: page.title.trim() } : null,
+    source: sourceInfo(
+      assistantSettings,
+      signedIn,
+      chatState.usage,
+      ownReady(assistantSettings),
+    ),
+    onOpenQuote: (card) => {
+      if (card.path !== active) open(card.path);
+      requestAnimationFrame(() => openFind(card.quote));
+    },
+    onSettings: () => setSettings(true),
+    onLayout: (layout) => saveAssistant({ ...assistantSettings, layout }),
+  };
+  const askButton = (
+    <AskAssistantButton chat={chat} docked={docked} readSelection={readSelection} />
+  );
+
   if (!project) {
     return (
       <AppLoading
@@ -890,7 +1070,11 @@ export default function App({
 
   const shell = (
     <div
-      className={cn("app", navOpen && "nav-open")}
+      className={cn(
+        "app",
+        navOpen && "nav-open",
+        docked && chatState.dockShown && "has-dock",
+      )}
       style={{ "--sidebar-width": `${sidebarWidth}px` } as React.CSSProperties}
     >
       <Sidebar
@@ -1028,7 +1212,14 @@ export default function App({
             nameOf={pageName}
             onOpen={(person) => person.where && open(person.where)}
           />
-          {actions}
+          {typeof actions === "function" ? (
+            actions(askButton)
+          ) : (
+            <>
+              {askButton}
+              {actions}
+            </>
+          )}
         </header>
 
         {finding && page && (
@@ -1107,6 +1298,7 @@ export default function App({
                 remote={remote}
                 others={others}
                 onSelection={presence ? shareSelection : undefined}
+                onAsk={askAbout}
               />
               <Backlinks links={linkedFrom} />
             </article>
@@ -1154,7 +1346,20 @@ export default function App({
             </span>
           )}
         </footer>
+        {!docked && <AssistantFloatingLayer {...assistantProps} />}
       </main>
+      {docked && <AssistantDock {...assistantProps} papers={signedIn} />}
+      <AssistantMenuLayer
+        chat={chat}
+        docked={docked}
+        papers={signedIn}
+        lookUp={signedIn}
+        onAsked={() => {
+          const editor = pageEditor.current;
+          if (editor && !editor.isDestroyed)
+            editor.commands.setTextSelection(editor.state.selection.to);
+        }}
+      />
 
       {deck?.presenting && <Presenter deck={deck} />}
       {exporting && (
@@ -1177,7 +1382,9 @@ export default function App({
           }}
         />
       )}
-      {settings && <SettingsDialog onClose={() => setSettings(false)} />}
+      {settings && (
+        <SettingsDialog account={signedIn} onClose={() => setSettings(false)} />
+      )}
       {showHistory && active && source !== null && store.history && (
         <HistoryDialog
           title={page?.title.trim() || t("Untitled")}

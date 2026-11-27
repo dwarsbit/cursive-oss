@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0 (unreleased)
+
+- Cursive has the assistant of Polemic and Binder. **Ask** next to your avatar opens it as a bar over the page, or as a panel on the right if you choose that in **Settings**, in **Assistant**. It reads your pages, and each quote in an answer is checked word for word against the page it comes from.
+- With text selected, click **Ask** in the toolbar, or press Cmd+J (Ctrl+J on Windows and Linux), for ready actions: **Make it shorter**, **Make it clearer**, **Fix spelling and grammar**, **Translate into English**, **Find a source to cite** and **Check its references**. Nothing changes until you apply its card: a rewrite shows what changes, a paper you cite goes after your sentence and into the references, and a reference that doesn't match its DOI comes with its fix.
+- The assistant runs on our model with Plus and Pro, and on your own provider or a model on your computer on any plan. Finding papers and checking references need your Scholarkit account.
+
 ## 0.6.0 (2026-11-26)
 
 - The desktop app works live in projects you share with others, as the browser does: you see their faces and carets, and their changes come in as they type, while every page stays saved in your folder. Projects only you work in sync as before.

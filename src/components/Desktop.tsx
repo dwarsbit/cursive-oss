@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import App, { type Status } from "@/App";
 import { AccountDialog, type AccountAsk } from "@/components/AccountDialog";
 import { AccountMenu } from "@/components/AccountMenu";
+import { desktopTurn } from "@/lib/assistant/transport";
 import { Mark } from "@/components/Mark";
 import { AppLoading } from "@scholarkit/editor/components/AppShell";
 import { HEADER_BUTTON } from "@scholarkit/editor/components/Dialog";
@@ -40,6 +41,9 @@ const server = new Server(desktopTransport);
 
 /** The account's usage for the account menu. */
 const loadUsage = () => server.usage();
+
+/** The assistant on our model, through the account: the desktop app asks from Rust. */
+const ASSISTANT = { turn: desktopTurn, usage: loadUsage };
 
 /** Opens a page of the account on the Scholarkit server, in the browser. */
 const openAccountPage = (path: string) =>
@@ -600,7 +604,8 @@ export function Desktop() {
         onRenameProject={renameProject}
         status={status}
         presence={live ? presence : undefined}
-        actions={
+        assistant={signedIn ? ASSISTANT : undefined}
+        actions={(ask) => (
           <>
             <button type="button" className={HEADER_BUTTON} onClick={share}>
               <Users className="size-3.5" aria-hidden />
@@ -612,6 +617,7 @@ export function Desktop() {
                 {t("Publish")}
               </button>
             )}
+            {ask}
             {signedIn ? (
               <AccountMenu
                 account={account}
@@ -633,7 +639,7 @@ export function Desktop() {
               </button>
             )}
           </>
-        }
+        )}
       />
       {accountDialog}
       {dialog === "share" && session.info && account && (
