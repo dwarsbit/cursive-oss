@@ -7,6 +7,22 @@ import { catalogs } from "./lib/languages";
 import { startMonitoring } from "./lib/monitoring";
 import "./index.css";
 
+// After a deploy, an open page can ask for a code file that only the other version has. Reload
+// once to get the version now served, instead of leaving part of the page blank. Not again
+// within 10 s, so a file that is really missing can't make the page reload over and over.
+window.addEventListener("vite:preloadError", (event) => {
+  const key = "reloaded-for-new-version";
+  try {
+    const last = Number(sessionStorage.getItem(key)) || 0;
+    if (Date.now() - last < 10_000) return;
+    sessionStorage.setItem(key, String(Date.now()));
+  } catch {
+    return;
+  }
+  event.preventDefault();
+  location.reload();
+});
+
 // The theme follows the system until the app has its own setting.
 const dark = window.matchMedia("(prefers-color-scheme: dark)");
 const applyTheme = () =>

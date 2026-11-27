@@ -6,7 +6,13 @@ import { AppLoading } from "@scholarkit/editor/components/AppShell";
 import type { Editor as TiptapEditor } from "@tiptap/core";
 import { Editor, type EditorChange } from "@scholarkit/editor/components/Editor";
 import { mergeMarkdown, type RemoteCaret } from "@scholarkit/editor/editor/collab";
-import { Faces, colorFor, liveStatus, onePerPerson } from "@scholarkit/collab";
+import {
+  Faces,
+  colorFor,
+  liveStatus,
+  onePerPerson,
+  useSettledConnection,
+} from "@scholarkit/collab";
 import type { RemoteCursor } from "@scholarkit/collab/codemirror";
 import { MarkdownEditor } from "@scholarkit/editor/components/MarkdownEditor";
 import { PageProperties } from "@scholarkit/editor/components/PageProperties";
@@ -409,10 +415,11 @@ export default function App({
       ),
     [peers, me],
   );
+  const connection = useSettledConnection(presence?.connection ?? "connected");
   const live = presence
     ? liveStatus({
         names: people.map((person) => person.name),
-        connection: presence.connection,
+        connection,
       })
     : null;
 
