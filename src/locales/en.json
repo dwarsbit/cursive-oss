@@ -116,7 +116,7 @@
   "Show it as": "Show it as",
   "A bar over the page": "A bar over the page",
   "A panel on the right": "A panel on the right",
-  "What the assistant reads for your question goes to our model, hosted by Mistral in the EU. It isn't kept or used for training.": "What the assistant reads for your question goes to our model, hosted by Mistral in the EU. It isn't kept or used for training.",
+  "What the assistant reads for your question goes to our model, hosted by Mistral in the EU. It isn't used for training.": "What the assistant reads for your question goes to our model, hosted by Mistral in the EU. It isn't used for training.",
   "Provider": "Provider",
   "Off": "Off",
   "(on this computer)": "(on this computer)",
@@ -852,6 +852,8 @@
   "Cloud compile today": "Cloud compile today",
   "{percent}% used": "{percent}% used",
   "More from midnight UTC": "More from midnight UTC",
+  "Assistant this month": "Assistant this month",
+  "More from the first of the month": "More from the first of the month",
   "Unlimited review links": "Unlimited review links",
   "{active} of {count} active review links": {
     "one": "{active} of {count} active review link",

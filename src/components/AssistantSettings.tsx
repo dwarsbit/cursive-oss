@@ -183,7 +183,7 @@ export function AssistantSettings({
       {ours ? (
         <p className="mt-2 text-xs text-muted-foreground">
           {t(
-            "What the assistant reads for your question goes to our model, hosted by Mistral in the EU. It isn't kept or used for training.",
+            "What the assistant reads for your question goes to our model, hosted by Mistral in the EU. It isn't used for training.",
           )}
         </p>
       ) : (

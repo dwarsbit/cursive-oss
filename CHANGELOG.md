@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0 (unreleased)
+
+- The account menu shows how much of this month's assistant you've used, on Plus and Pro, next to storage.
+- The assistant speaks Dutch, German, French and Spanish too: its buttons, menus and messages follow the interface language.
+
 ## 0.7.0 (2026-11-27)
 
 - Cursive has the assistant of Polemic and Binder. **Ask** next to your avatar opens it as a bar over the page, or as a panel on the right if you choose that in **Settings**, in **Assistant**. It reads your pages, and each quote in an answer is checked word for word against the page it comes from.
