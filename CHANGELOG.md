@@ -2,6 +2,7 @@
 
 ## 0.8.0 (unreleased)
 
+- In the browser, **A new version is available** shows at the bottom left after we update Cursive. **Load new version** saves your work first, then loads it; **Later** hides it until the next version. The desktop app's **Update ready** card has the same look.
 - The account menu shows how much of this month's assistant you've used, on Plus and Pro, next to storage.
 - The assistant speaks Dutch, German, French and Spanish too: its buttons, menus and messages follow the interface language.
 - A shared project no longer shows **Reconnecting…** for a connection that comes back within 2 seconds, as it does while we update the services. In the browser, a page that was open during an update reloads itself if it needs to, instead of leaving part of it blank.

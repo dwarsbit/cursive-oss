@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { startLanguage } from "@scholarkit/i18n";
 import { isDesktop } from "@scholarkit/editor/lib/platform";
 import { invoke } from "@tauri-apps/api/core";
-import { catalogs } from "./lib/languages";
+import { catalogs, saveBeforeReload } from "./lib/languages";
 import { startMonitoring } from "./lib/monitoring";
 import "./index.css";
 
@@ -57,6 +57,8 @@ async function start() {
     { Web },
     { UpdateCard },
     updates,
+    { NewVersionCard },
+    { watchNewVersion },
     sample,
     store,
   ] = await Promise.all([
@@ -65,10 +67,17 @@ async function start() {
     import("./components/Web"),
     import("@scholarkit/updates/components/UpdateCard"),
     import("./lib/updates"),
+    import("@scholarkit/updates/web/NewVersionCard"),
+    import("@scholarkit/updates/web/new-version"),
     import("@scholarkit/editor/editor/sample"),
     import("./lib/browser-store"),
   ]);
   const { DOWNLOAD_URL, updater } = updates;
+  // The browser build says when a newer one is served (development builds have no name).
+  const newVersion =
+    !isDesktop && import.meta.env.MODE === "web"
+      ? watchNewVersion(import.meta.env.BASE_URL)
+      : null;
 
   // The desktop app keeps a project as a folder on disk. The web build
   // (`pnpm build:web`) runs on the Scholarkit server and keeps projects in
@@ -87,7 +96,10 @@ async function start() {
       )}
     </>
   ) : import.meta.env.MODE === "web" ? (
-    <Web />
+    <>
+      <Web />
+      {newVersion && <NewVersionCard watcher={newVersion} save={saveBeforeReload} />}
+    </>
   ) : (
     <App
       store={store.browserStore(sample.SAMPLE_PROJECT)}

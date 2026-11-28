@@ -19,6 +19,12 @@
 		file_server
 	}
 
+	# The build being served ("A new version is available"): never kept by a browser or the CDN.
+	handle /cursive/version.json {
+		header Cache-Control "no-store"
+		file_server
+	}
+
 	# Every other path under /cursive is the app (/cursive/<id> opens a project).
 	@app path /cursive /cursive/*
 	handle @app {

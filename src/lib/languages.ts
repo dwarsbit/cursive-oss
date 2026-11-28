@@ -25,7 +25,10 @@ export const languageCodes = availableLanguages(catalogs, import.meta.env.DEV);
 
 let save: (() => Promise<void>) | null = null;
 
-/** What to write before the window reloads in another language: the open project's changes. */
+/**
+ * What to write before the window reloads, in another language or to load a new version: the
+ * open project's changes.
+ */
 export function saveBeforeSwitch(next: () => Promise<void>): () => void {
   save = next;
   return () => {
@@ -41,4 +44,9 @@ export async function switchLanguage(code: string): Promise<void> {
   await save?.();
   saveLanguage(code);
   window.location.reload();
+}
+
+/** Writes the open project's changes, before the page reloads to load a new version. */
+export async function saveBeforeReload(): Promise<void> {
+  await save?.();
 }

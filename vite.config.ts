@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { buildVersion } from "@scholarkit/updates/vite";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -31,7 +32,13 @@ export default defineConfig(({ mode }) => ({
     outDir: mode === "web" ? "dist-web" : "dist",
     sourcemap: sentryToken ? "hidden" : false,
   },
-  plugins: [react(), tailwindcss(), ...sourceMaps],
+  // The browser build names itself, for "A new version is available".
+  plugins: [
+    react(),
+    tailwindcss(),
+    ...sourceMaps,
+    ...(mode === "web" ? [buildVersion()] : []),
+  ],
   define: { __APP_VERSION__: JSON.stringify(version) },
   resolve: {
     alias: [
