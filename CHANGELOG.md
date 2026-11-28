@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.0 (unreleased)
+## 0.8.0 (2026-11-28)
 
 - On the account page, **Release news by email** gets you an email when a new version of Binder, Polemic or Cursive is out, at most once a month. It stays off unless you turn it on.
 - **Published with Cursive** at the bottom of a site now leads to Cursive on our website instead of its code.
