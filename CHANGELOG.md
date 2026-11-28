@@ -2,6 +2,8 @@
 
 ## 0.8.0 (unreleased)
 
+- On the account page, **Release news by email** gets you an email when a new version of Binder, Polemic or Cursive is out, at most once a month. It stays off unless you turn it on.
+- **Published with Cursive** at the bottom of a site now leads to Cursive on our website instead of its code.
 - In the browser, **A new version is available** shows at the bottom left after we update Cursive. **Load new version** saves your work first, then loads it; **Later** hides it until the next version. The desktop app's **Update ready** card has the same look.
 - The account menu shows how much of this month's assistant you've used, on Plus and Pro, next to storage.
 - The assistant speaks Dutch, German, French and Spanish too: its buttons, menus and messages follow the interface language.
